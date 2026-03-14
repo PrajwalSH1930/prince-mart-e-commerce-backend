@@ -5,6 +5,7 @@ import com.pm.product.dto.ProductVariantDTO;
 import com.pm.product.entity.Category;
 import com.pm.product.entity.Product;
 import com.pm.product.entity.ProductVariant;
+import com.pm.product.exception.ResourceNotFoundException;
 import com.pm.product.repository.CategoryRepository;
 import com.pm.product.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class ProductService {
     @Transactional
     public Product createProduct(ProductDTO dto) {
         Category category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         Product product = new Product();
         product.setName(dto.getName());
@@ -58,7 +59,7 @@ public class ProductService {
     
     public Product getProductBySlug(String slug) {
         return productRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Product not found with slug: " + slug));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with slug: " + slug));
     }
 
     public List<Product> getAllProducts() {

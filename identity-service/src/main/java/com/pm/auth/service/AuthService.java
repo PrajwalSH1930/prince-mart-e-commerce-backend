@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.pm.auth.dto.UserDTO;
 import com.pm.auth.entity.User;
+import com.pm.auth.exception.ResourceNotFoundException;
 import com.pm.auth.entity.Role;
 import com.pm.auth.repository.UserRepository;
 
@@ -36,13 +37,13 @@ public class AuthService {
         if (authenticate.isAuthenticated()) {
             return jwtService.generateToken(email);
         } else {
-            throw new RuntimeException("Invalid access");
+            throw new ResourceNotFoundException("Invalid access");
         }
     }
 
     public User registerUser(UserDTO dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email is already registered!");
+            throw new ResourceNotFoundException("Email is already registered!");
         }
 
         User user = new User();
@@ -65,6 +66,6 @@ public class AuthService {
     }
     
 	public User getUserById(Long id) {
-		return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User Not Found!!"));
+		return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User Not Found!!"));
 	}
 }
