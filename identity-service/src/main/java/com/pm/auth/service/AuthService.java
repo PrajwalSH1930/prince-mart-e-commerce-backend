@@ -63,4 +63,8 @@ public class AuthService {
     public void validateToken(String token) {
         jwtService.validateToken(token);
     }
+    
+	public User getUserById(Long id) {
+		return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User Not Found!!"));
+	}
 }

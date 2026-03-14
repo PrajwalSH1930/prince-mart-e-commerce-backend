@@ -3,16 +3,16 @@ server:
 
 spring:
   application:
-    name: identity-service
+    name: IDENTITY-SERVICE
+
   datasource:
     url: jdbc:mysql://localhost:3306/pm_identity_db?createDatabaseIfNotExist=true
     username: root
     password: Sprince1*
     driver-class-name: com.mysql.cj.jdbc.Driver
-  
+
   jpa:
     hibernate:
-      # 'update' creates tables if they don't exist and updates them if they change
       ddl-auto: update
     show-sql: true
     properties:

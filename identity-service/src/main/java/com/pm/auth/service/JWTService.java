@@ -39,10 +39,15 @@ public class JWTService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 	
-	public void validateToken(final String token) {
-	    Jwts.parser()
-	        .setSigningKey(getSignKey())
-	        .build()
-	        .parseClaimsJws(token);
+	public boolean validateToken(String token) {
+	    try {
+	        Jwts.parser()
+	            .setSigningKey(getSignKey())
+	            .build()
+	            .parseClaimsJws(token);
+	        return true;
+	    } catch (Exception e) {
+	        return false;
+	    }
 	}
 }
