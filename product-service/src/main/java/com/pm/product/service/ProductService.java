@@ -1,0 +1,67 @@
+package com.pm.product.service;
+
+import com.pm.product.dto.ProductDTO;
+import com.pm.product.dto.ProductVariantDTO;
+import com.pm.product.entity.Category;
+import com.pm.product.entity.Product;
+import com.pm.product.entity.ProductVariant;
+import com.pm.product.repository.CategoryRepository;
+import com.pm.product.repository.ProductRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class ProductService {
+
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+    }
+
+    @Transactional
+    public Product createProduct(ProductDTO dto) {
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Product product = new Product();
+        product.setName(dto.getName());
+        product.setDescription(dto.getDescription());
+        product.setBrand(dto.getBrand());
+        product.setMainImageUrl(dto.getMainImageUrl());
+        product.setCategory(category);
+        
+        // Auto-generate slug: "Nike Air Max" -> "nike-air-max"
+        product.setSlug(dto.getName().toLowerCase().replaceAll(" ", "-") + "-" + System.currentTimeMillis());
+
+        List<ProductVariant> variants = new ArrayList<>();
+        for (ProductVariantDTO vDto : dto.getVariants()) {
+            ProductVariant variant = new ProductVariant();
+            variant.setProduct(product);
+            variant.setSize(vDto.getSize());
+            variant.setColor(vDto.getColor());
+            variant.setPrice(vDto.getPrice());
+            variant.setCurrency(vDto.getCurrency() != null ? vDto.getCurrency() : "INR");
+            variant.setStockQuantity(vDto.getStockQuantity());
+            variant.setSku(vDto.getSku());
+            variants.add(variant);
+        }
+
+        product.setVariants(variants);
+        return productRepository.save(product);
+    }
+    
+    public Product getProductBySlug(String slug) {
+        return productRepository.findBySlug(slug)
+                .orElseThrow(() -> new RuntimeException("Product not found with slug: " + slug));
+    }
+
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+}
