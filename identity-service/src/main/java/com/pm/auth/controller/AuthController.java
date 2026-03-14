@@ -40,4 +40,9 @@ public class AuthController {
         // We will implement token validation logic next
         return "Token is valid";
     }
+    
+    @GetMapping("/id/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable("id") Long id) {
+    	return ResponseEntity.ok(authService.getUserById(id));
+    }
 }

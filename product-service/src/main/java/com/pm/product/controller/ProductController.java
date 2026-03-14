@@ -1,0 +1,41 @@
+package com.pm.product.controller;
+
+import com.pm.product.dto.ProductDTO;
+import com.pm.product.entity.Product;
+import com.pm.product.service.ProductService;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/products")
+public class ProductController {
+
+    private final ProductService productService;
+
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
+    
+    @GetMapping("/welcome")
+    public String welcome() {
+    	return "Welcome!! This is the Product Service for Prince Mart by Prince Inc.";
+    }
+
+    @PostMapping("/add")
+    public ResponseEntity<Product> addProduct(@RequestBody ProductDTO productDto) {
+        return ResponseEntity.ok(productService.createProduct(productDto));
+    }
+    
+    @GetMapping("/all")
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<Product> getProductDetails(@PathVariable String slug) {
+        return ResponseEntity.ok(productService.getProductBySlug(slug));
+    }
+}

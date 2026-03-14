@@ -4,20 +4,26 @@ server:
 spring:
   application:
     name: api-gateway
+
   cloud:
     gateway:
       routes:
+
         # Identity Service Route
         - id: identity-service
           uri: lb://IDENTITY-SERVICE
           predicates:
-            - Path=/auth/**, /users/**
+            - Path=/auth/**,/users/**
+          filters:
+            - AuthenticationFilter
 
         # Product Service Route
         - id: product-service
           uri: lb://PRODUCT-SERVICE
           predicates:
-            - Path=/products/**, /categories/**
+            - Path=/products/**,/categories/**
+          filters:
+            - AuthenticationFilter
 
 eureka:
   client:
