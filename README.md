@@ -1,2 +1,2 @@
-# prince-mart-e-commerce-backend
+# Prince Mart E-Commerce Website Backend
 Prince Mart by Prince Inc.
