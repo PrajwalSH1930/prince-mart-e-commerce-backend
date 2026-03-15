@@ -56,4 +56,10 @@ public class CartController {
             @PathVariable Long variantId) {
         return ResponseEntity.ok(cartService.removeFromCart(userId, variantId));
     }
+    
+    @DeleteMapping("/clear")
+    public ResponseEntity<String> clearCart(@RequestHeader("X-User-Id") Long userId) {
+        cartService.clearCart(userId);
+        return ResponseEntity.ok("Cart cleared successfully");
+    }
 }

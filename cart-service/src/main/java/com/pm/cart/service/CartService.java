@@ -97,9 +97,14 @@ public class CartService {
     @Transactional
     public void clearCart(Long userId) {
         Cart cart = cartRepository.findByUserIdAndStatus(userId, "active")
-                .orElseThrow(() -> new ResourceNotFoundException("Active cart not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Active cart not found for user: " + userId));
         
-        cart.setStatus("converted"); // This keeps a history of what was in the cart
+        // Option A: Hard delete items
+        cart.getItems().clear(); 
+        
+        // Option B: Change status so the cart is no longer "active"
+        cart.setStatus("COMPLETED"); 
+        
         cartRepository.save(cart);
     }
 }

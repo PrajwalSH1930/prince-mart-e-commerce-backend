@@ -13,6 +13,8 @@ spring:
           uri: lb://IDENTITY-SERVICE
           predicates:
             - Path=/auth/**,/users/**
+          filters:
+            - AuthenticationFilter
 
         - id: product-service
           uri: lb://PRODUCT-SERVICE
@@ -32,6 +34,13 @@ spring:
           uri: lb://CART-SERVICE
           predicates:
             - Path=/cart/**
+          filters:
+            - AuthenticationFilter
+
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/orders/**
           filters:
             - AuthenticationFilter
 
