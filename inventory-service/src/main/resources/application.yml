@@ -1,11 +1,11 @@
 server:
-  port: 8082
+  port: 8083
 
 spring:
   application:
-    name: product-service
+    name: inventory-service
   datasource:
-    url: jdbc:mysql://localhost:3306/pm_product_db
+    url: jdbc:mysql://localhost:3306/pm_inventory_db
     username: root
     password: Sprince1*
   jpa:
