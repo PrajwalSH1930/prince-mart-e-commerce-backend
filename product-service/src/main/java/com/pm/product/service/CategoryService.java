@@ -1,6 +1,7 @@
 package com.pm.product.service;
 
 import com.pm.product.entity.Category;
+import com.pm.product.exception.ResourceNotFoundException;
 import com.pm.product.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,6 @@ public class CategoryService {
 
     public Category getCategoryById(Long id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
     }
 }

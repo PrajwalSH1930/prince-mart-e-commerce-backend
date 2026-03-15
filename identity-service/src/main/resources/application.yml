@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: IDENTITY-SERVICE
+    name: identity-service
 
   datasource:
     url: jdbc:mysql://localhost:3306/pm_identity_db?createDatabaseIfNotExist=true
@@ -20,6 +20,12 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
 
 eureka:
+  instance:
+    prefer-ip-address: true
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+logging:
+  level:
+    org.springframework.cloud.vault: DEBUG

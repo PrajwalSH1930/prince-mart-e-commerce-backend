@@ -9,15 +9,11 @@ spring:
     gateway:
       routes:
 
-        # Identity Service Route
         - id: identity-service
           uri: lb://IDENTITY-SERVICE
           predicates:
             - Path=/auth/**,/users/**
-          filters:
-            - AuthenticationFilter
 
-        # Product Service Route
         - id: product-service
           uri: lb://PRODUCT-SERVICE
           predicates:
@@ -25,7 +21,23 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: inventory-service
+          uri: lb://INVENTORY-SERVICE
+          predicates:
+            - Path=/inventory/**
+          filters:
+            - AuthenticationFilter
+
+        - id: cart-service
+          uri: lb://CART-SERVICE
+          predicates:
+            - Path=/cart/**
+          filters:
+            - AuthenticationFilter
+
 eureka:
+  instance:
+    prefer-ip-address: true
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
