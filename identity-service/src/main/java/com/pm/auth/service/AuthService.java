@@ -2,10 +2,9 @@ package com.pm.auth.service;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication; // Missing Import
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import com.pm.auth.dto.UserDTO;
 import com.pm.auth.entity.User;
 import com.pm.auth.exception.ResourceNotFoundException;
@@ -17,7 +16,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JWTService jwtService; // Ensure casing matches your file name
+    private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, 
@@ -29,15 +28,16 @@ public class AuthService {
     }
 
     public String generateToken(String email, String password) {
-        // This will use the AuthenticationProvider we configured to check the DB
         Authentication authenticate = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
         );
 
         if (authenticate.isAuthenticated()) {
-            return jwtService.generateToken(email);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            return jwtService.generateToken(email, user.getUserId());
         } else {
-            throw new ResourceNotFoundException("Invalid access");
+            throw new RuntimeException("Invalid Access");
         }
     }
 
@@ -49,23 +49,21 @@ public class AuthService {
         User user = new User();
         user.setEmail(dto.getEmail());
         user.setPhone(dto.getPhone());
-        
-        if (dto.getRole() != null) {
-            user.setRole(Role.valueOf(dto.getRole().toUpperCase()));
-        } else {
-            user.setRole(Role.CUSTOMER);
-        }
-        
+        user.setRole(dto.getRole() != null ? Role.valueOf(dto.getRole().toUpperCase()) : Role.CUSTOMER);
         user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         
         return userRepository.save(user);
     }
-    
+
     public void validateToken(String token) {
         jwtService.validateToken(token);
     }
     
-	public User getUserById(Long id) {
-		return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User Not Found!!"));
-	}
+    public String extractUserId(String token) {
+        return jwtService.extractUserId(token);
+    }
+
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User Not Found!!"));
+    }
 }
