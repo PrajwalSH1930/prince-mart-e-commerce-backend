@@ -5,16 +5,6 @@ spring:
   application:
     name: identity-service
 
-  cloud:
-    vault:
-      uri: http://127.0.0.1:8200
-      token: hvs.MghJeeekEuv1CBLbvMpzR8S1
-
-      kv:
-        enabled: true
-        backend: secret
-        application-name: princemart
-
   datasource:
     url: jdbc:mysql://localhost:3306/pm_identity_db?createDatabaseIfNotExist=true
     username: root
