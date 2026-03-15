@@ -1,7 +1,9 @@
 package com.pm.order.service;
 
+import com.pm.order.client.AddressClient; // New Client
 import com.pm.order.client.CartClient;
-import com.pm.order.client.InventoryClient; 
+import com.pm.order.client.InventoryClient;
+import com.pm.order.dto.AddressResponse; // New DTO
 import com.pm.order.dto.CartResponse;
 import com.pm.order.dto.OrderRequest;
 import com.pm.order.dto.StockUpdateDTO;
@@ -24,28 +26,42 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderStatusHistoryRepository historyRepository;
     private final CartClient cartClient;
-    private final InventoryClient inventoryClient; 
+    private final InventoryClient inventoryClient;
+    private final AddressClient addressClient; // Added
 
-    public OrderService(OrderRepository orderRepository, 
-                        OrderStatusHistoryRepository historyRepository, 
+    public OrderService(OrderRepository orderRepository,
+                        OrderStatusHistoryRepository historyRepository,
                         CartClient cartClient,
-                        InventoryClient inventoryClient) {
+                        InventoryClient inventoryClient,
+                        AddressClient addressClient) {
         this.orderRepository = orderRepository;
         this.historyRepository = historyRepository;
         this.cartClient = cartClient;
         this.inventoryClient = inventoryClient;
+        this.addressClient = addressClient;
     }
 
     @Transactional
     public Order placeOrder(Long userId, OrderRequest request) {
         // 1. Fetch Cart from Cart Service via Feign
         CartResponse cart = cartClient.getMyCart(userId);
-        
         if (cart == null || cart.getItems().isEmpty()) {
             throw new RuntimeException("Cannot place order: Cart is empty");
         }
 
-        // 2. Create Order Entity
+        // 2. Fetch Address from Identity Service & Create Snapshot
+        AddressResponse address = addressClient.getAddressById(request.getShippingAddressId());
+        String snapshot = String.format("%s\n%s, %s\n%s, %s, %s - %s\nPhone: %s",
+                address.getFullName(),
+                address.getAddressLine1(),
+                address.getAddressLine2() != null ? address.getAddressLine2() : "",
+                address.getCity(),
+                address.getState(),
+                address.getCountry(),
+                address.getPostalCode(),
+                address.getPhone());
+
+        // 3. Create Order Entity
         Order order = new Order();
         order.setUserId(userId);
         order.setOrderStatus("PENDING");
@@ -53,8 +69,9 @@ public class OrderService {
         order.setCurrency(request.getCurrency());
         order.setShippingAddressId(request.getShippingAddressId());
         order.setBillingAddressId(request.getBillingAddressId());
+        order.setShippingAddressSnapshot(snapshot); // Saving the snapshot!
 
-        // 3. Map Cart Items to Order Items
+        // 4. Map Cart Items to Order Items
         List<OrderItem> orderItems = cart.getItems().stream().map(cartItem -> {
             OrderItem item = new OrderItem();
             item.setOrder(order);
@@ -62,28 +79,25 @@ public class OrderService {
             item.setVariantId(cartItem.getVariantId());
             item.setQuantity(cartItem.getQuantity());
             item.setPrice(cartItem.getPriceSnapshot());
-            
-            // Calculate subtotal: price * quantity
             item.setSubtotal(cartItem.getPriceSnapshot().multiply(new BigDecimal(cartItem.getQuantity())));
             return item;
         }).collect(Collectors.toList());
 
         order.setItems(orderItems);
 
-        // 4. Calculate Total Amount
+        // 5. Calculate Total Amount
         BigDecimal total = orderItems.stream()
                 .map(OrderItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         order.setTotalAmount(total);
 
-        // 5. Save Order (This also saves items because of CascadeType.ALL)
+        // 6. Save Order
         Order savedOrder = orderRepository.save(order);
 
-        // 6. Record Initial History
+        // 7. Record Initial History
         saveHistory(savedOrder, "PENDING", "SYSTEM");
 
-        // 7. Reduce Stock in Inventory Service
-        // Map order items to the DTO expected by Inventory Service
+        // 8. Reduce Stock in Inventory Service
         List<StockUpdateDTO> stockUpdates = savedOrder.getItems().stream()
                 .map(item -> new StockUpdateDTO(item.getVariantId(), item.getQuantity()))
                 .collect(Collectors.toList());
@@ -91,17 +105,13 @@ public class OrderService {
         try {
             inventoryClient.reduceStock(stockUpdates);
         } catch (Exception e) {
-            // If stock reduction fails (e.g., insufficient stock), 
-            // the @Transactional will rollback Step 5 and 6 automatically.
             throw new RuntimeException("Inventory update failed: " + e.getMessage());
         }
-        
-        // 8. Clear/Deactivate the cart via Feign
+
+        // 9. Clear the cart via Feign
         try {
             cartClient.clearCart(userId);
-            System.out.println("Cart cleared successfully for user: " + userId);
         } catch (Exception e) {
-            // We log the error but allow the order to proceed as it's already saved and stock is reduced
             System.err.println("Non-critical error: Failed to clear cart - " + e.getMessage());
         }
 
@@ -115,7 +125,7 @@ public class OrderService {
         history.setChangedBy(changedBy);
         historyRepository.save(history);
     }
-    
+
     public List<Order> getOrderHistory(Long userId) {
         List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
         if (orders.isEmpty()) {
@@ -123,12 +133,11 @@ public class OrderService {
         }
         return orders;
     }
-    
+
     public Order getOrderDetails(Long orderId, Long userId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
-                
-        // Security check: Ensure the order actually belongs to the user asking for it
+
         if (!order.getUserId().equals(userId)) {
             throw new RuntimeException("Unauthorized to view this order");
         }

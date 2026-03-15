@@ -13,6 +13,8 @@ spring:
           uri: lb://IDENTITY-SERVICE
           predicates:
             - Path=/auth/**,/users/**
+          filters:
+            - AuthenticationFilter
 
         - id: product-service
           uri: lb://PRODUCT-SERVICE

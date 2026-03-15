@@ -44,6 +44,17 @@ public class Order {
     @JsonIgnore
     private List<OrderItem> items;
 
+    @Column(columnDefinition = "TEXT")
+    private String shippingAddressSnapshot;
+    
+	public String getShippingAddressSnapshot() {
+		return shippingAddressSnapshot;
+	}
+
+	public void setShippingAddressSnapshot(String shippingAddressSnapshot) {
+		this.shippingAddressSnapshot = shippingAddressSnapshot;
+	}
+
 	public Long getOrderId() {
 		return orderId;
 	}
@@ -125,7 +136,7 @@ public class Order {
 	}
 
 	public Order(Long orderId, Long userId, String orderStatus, String paymentStatus, BigDecimal totalAmount,
-			String currency, Long shippingAddressId, Long billingAddressId, LocalDateTime createdAt,
+			String currency, Long shippingAddressId, Long billingAddressId, LocalDateTime createdAt, String shippingAddressSnapshot,
 			List<OrderItem> items) {
 		super();
 		this.orderId = orderId;
@@ -138,6 +149,7 @@ public class Order {
 		this.billingAddressId = billingAddressId;
 		this.createdAt = createdAt;
 		this.items = items;
+		this.shippingAddressSnapshot = shippingAddressSnapshot;
 	}
 
 	public Order() {
