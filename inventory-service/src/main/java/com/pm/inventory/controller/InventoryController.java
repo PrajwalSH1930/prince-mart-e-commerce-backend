@@ -1,9 +1,13 @@
 package com.pm.inventory.controller;
 
+import com.pm.inventory.dto.StockUpdateDTO;
 import com.pm.inventory.entity.Inventory;
 import com.pm.inventory.entity.Warehouse;
 import com.pm.inventory.service.InventoryService;
 import com.pm.inventory.repository.WarehouseRepository;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,4 +56,9 @@ public class InventoryController {
     	return ResponseEntity.ok(inventoryService.getInventoryById(id));
     }
     
+    @PostMapping("/reduce-stock")
+    public ResponseEntity<String> reduceStock(@RequestBody List<StockUpdateDTO> updates) {
+        inventoryService.reduceStock(updates);
+        return ResponseEntity.ok("Stock updated successfully");
+    }
 }
