@@ -61,4 +61,10 @@ public class InventoryController {
         inventoryService.reduceStock(updates);
         return ResponseEntity.ok("Stock updated successfully");
     }
+    
+    @PostMapping("/add-stock-bulk")
+    public ResponseEntity<String> addStockBulk(@RequestBody List<StockUpdateDTO> updates) {
+        inventoryService.addStockBulk(updates);
+        return ResponseEntity.ok("Stock restored successfully");
+    }
 }
