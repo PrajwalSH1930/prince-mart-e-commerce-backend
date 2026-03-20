@@ -2,9 +2,7 @@ package com.pm.order.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +23,9 @@ public class Order {
     
     @Column(name="payment_status")
     private String paymentStatus; // UNPAID, PAID, REFUNDED
+
+    @Column(name="transaction_id") // Added for tracking payment
+    private String transactionId;
     
     @Column(name="total_amount")
     private BigDecimal totalAmount;
@@ -47,115 +48,123 @@ public class Order {
     @Column(columnDefinition = "TEXT")
     private String shippingAddressSnapshot;
     
-	public String getShippingAddressSnapshot() {
-		return shippingAddressSnapshot;
-	}
+    // Getters and Setters
+    public String getTransactionId() {
+        return transactionId;
+    }
 
-	public void setShippingAddressSnapshot(String shippingAddressSnapshot) {
-		this.shippingAddressSnapshot = shippingAddressSnapshot;
-	}
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
 
-	public Long getOrderId() {
-		return orderId;
-	}
+    public String getShippingAddressSnapshot() {
+        return shippingAddressSnapshot;
+    }
 
-	public void setOrderId(Long orderId) {
-		this.orderId = orderId;
-	}
+    public void setShippingAddressSnapshot(String shippingAddressSnapshot) {
+        this.shippingAddressSnapshot = shippingAddressSnapshot;
+    }
 
-	public Long getUserId() {
-		return userId;
-	}
+    public Long getOrderId() {
+        return orderId;
+    }
 
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
 
-	public String getOrderStatus() {
-		return orderStatus;
-	}
+    public Long getUserId() {
+        return userId;
+    }
 
-	public void setOrderStatus(String orderStatus) {
-		this.orderStatus = orderStatus;
-	}
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 
-	public String getPaymentStatus() {
-		return paymentStatus;
-	}
+    public String getOrderStatus() {
+        return orderStatus;
+    }
 
-	public void setPaymentStatus(String paymentStatus) {
-		this.paymentStatus = paymentStatus;
-	}
+    public void setOrderStatus(String orderStatus) {
+        this.orderStatus = orderStatus;
+    }
 
-	public BigDecimal getTotalAmount() {
-		return totalAmount;
-	}
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
 
-	public void setTotalAmount(BigDecimal totalAmount) {
-		this.totalAmount = totalAmount;
-	}
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
 
-	public String getCurrency() {
-		return currency;
-	}
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
 
-	public void setCurrency(String currency) {
-		this.currency = currency;
-	}
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
 
-	public Long getShippingAddressId() {
-		return shippingAddressId;
-	}
+    public String getCurrency() {
+        return currency;
+    }
 
-	public void setShippingAddressId(Long shippingAddressId) {
-		this.shippingAddressId = shippingAddressId;
-	}
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
 
-	public Long getBillingAddressId() {
-		return billingAddressId;
-	}
+    public Long getShippingAddressId() {
+        return shippingAddressId;
+    }
 
-	public void setBillingAddressId(Long billingAddressId) {
-		this.billingAddressId = billingAddressId;
-	}
+    public void setShippingAddressId(Long shippingAddressId) {
+        this.shippingAddressId = shippingAddressId;
+    }
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
+    public Long getBillingAddressId() {
+        return billingAddressId;
+    }
 
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
+    public void setBillingAddressId(Long billingAddressId) {
+        this.billingAddressId = billingAddressId;
+    }
 
-	public List<OrderItem> getItems() {
-		return items;
-	}
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-	public void setItems(List<OrderItem> items) {
-		this.items = items;
-	}
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
-	public Order(Long orderId, Long userId, String orderStatus, String paymentStatus, BigDecimal totalAmount,
-			String currency, Long shippingAddressId, Long billingAddressId, LocalDateTime createdAt, String shippingAddressSnapshot,
-			List<OrderItem> items) {
-		super();
-		this.orderId = orderId;
-		this.userId = userId;
-		this.orderStatus = orderStatus;
-		this.paymentStatus = paymentStatus;
-		this.totalAmount = totalAmount;
-		this.currency = currency;
-		this.shippingAddressId = shippingAddressId;
-		this.billingAddressId = billingAddressId;
-		this.createdAt = createdAt;
-		this.items = items;
-		this.shippingAddressSnapshot = shippingAddressSnapshot;
-	}
+    public List<OrderItem> getItems() {
+        return items;
+    }
 
-	public Order() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
-    
-    
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
+    }
+
+    // Updated Constructor
+    public Order(Long orderId, Long userId, String orderStatus, String paymentStatus, String transactionId, BigDecimal totalAmount,
+            String currency, Long shippingAddressId, Long billingAddressId, LocalDateTime createdAt, String shippingAddressSnapshot,
+            List<OrderItem> items) {
+        super();
+        this.orderId = orderId;
+        this.userId = userId;
+        this.orderStatus = orderStatus;
+        this.paymentStatus = paymentStatus;
+        this.transactionId = transactionId;
+        this.totalAmount = totalAmount;
+        this.currency = currency;
+        this.shippingAddressId = shippingAddressId;
+        this.billingAddressId = billingAddressId;
+        this.createdAt = createdAt;
+        this.items = items;
+        this.shippingAddressSnapshot = shippingAddressSnapshot;
+    }
+
+    public Order() {
+        super();
+    }
 }

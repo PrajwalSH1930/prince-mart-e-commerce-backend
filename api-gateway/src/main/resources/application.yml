@@ -44,6 +44,13 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: order-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/payments/**
+          filters:
+            - AuthenticationFilter		
+
 eureka:
   instance:
     prefer-ip-address: true

@@ -1,12 +1,10 @@
 package com.pm.order.service;
 
-import com.pm.order.client.AddressClient; // New Client
+import com.pm.order.client.AddressClient;
 import com.pm.order.client.CartClient;
 import com.pm.order.client.InventoryClient;
-import com.pm.order.dto.AddressResponse; // New DTO
-import com.pm.order.dto.CartResponse;
-import com.pm.order.dto.OrderRequest;
-import com.pm.order.dto.StockUpdateDTO;
+import com.pm.order.client.PaymentClient;
+import com.pm.order.dto.*;
 import com.pm.order.entity.Order;
 import com.pm.order.entity.OrderItem;
 import com.pm.order.entity.OrderStatusHistory;
@@ -27,18 +25,21 @@ public class OrderService {
     private final OrderStatusHistoryRepository historyRepository;
     private final CartClient cartClient;
     private final InventoryClient inventoryClient;
-    private final AddressClient addressClient; // Added
+    private final AddressClient addressClient;
+    private final PaymentClient paymentClient;
 
     public OrderService(OrderRepository orderRepository,
                         OrderStatusHistoryRepository historyRepository,
                         CartClient cartClient,
                         InventoryClient inventoryClient,
-                        AddressClient addressClient) {
+                        AddressClient addressClient,
+                        PaymentClient paymentClient) {
         this.orderRepository = orderRepository;
         this.historyRepository = historyRepository;
         this.cartClient = cartClient;
         this.inventoryClient = inventoryClient;
         this.addressClient = addressClient;
+        this.paymentClient = paymentClient;
     }
 
     @Transactional
@@ -69,7 +70,7 @@ public class OrderService {
         order.setCurrency(request.getCurrency());
         order.setShippingAddressId(request.getShippingAddressId());
         order.setBillingAddressId(request.getBillingAddressId());
-        order.setShippingAddressSnapshot(snapshot); // Saving the snapshot!
+        order.setShippingAddressSnapshot(snapshot); 
 
         // 4. Map Cart Items to Order Items
         List<OrderItem> orderItems = cart.getItems().stream().map(cartItem -> {
@@ -111,11 +112,61 @@ public class OrderService {
         // 9. Clear the cart via Feign
         try {
             cartClient.clearCart(userId);
+            System.out.println("Cart cleared successfully for user: " + userId);
         } catch (Exception e) {
             System.err.println("Non-critical error: Failed to clear cart - " + e.getMessage());
         }
 
+        // 10. Process Payment via Payment Service
+        PaymentRequest paymentRequest = new PaymentRequest(
+                savedOrder.getOrderId(),
+                savedOrder.getTotalAmount(),
+                savedOrder.getCurrency(),
+                "RAZORPAY" 
+        );
+
+        try {
+            PaymentResponse paymentResponse = paymentClient.process(paymentRequest);
+            
+            if ("COMPLETED".equalsIgnoreCase(paymentResponse.getPaymentStatus())) {
+                savedOrder.setPaymentStatus("PAID");
+                savedOrder.setOrderStatus("CONFIRMED");
+                savedOrder.setTransactionId(paymentResponse.getTransactionId());
+                orderRepository.save(savedOrder);
+                saveHistory(savedOrder, "PAYMENT_SUCCESS", "SYSTEM");
+            } else {
+                // Payment technically called but returned FAILED status
+                handlePaymentFailure(savedOrder, stockUpdates, "Payment Rejected by Gateway");
+            }
+            
+        } catch (Exception e) {
+            // Service Down / Timeout / Network Issue
+            handlePaymentFailure(savedOrder, stockUpdates, "Payment Service Connection Error: " + e.getMessage());
+        }
+
         return savedOrder;
+    }
+
+    /**
+     * Handles Compensation Logic: Cancels order and restores Inventory Stock
+     */
+    private void handlePaymentFailure(Order order, List<StockUpdateDTO> stockUpdates, String reason) {
+        System.err.println("Payment failed for order " + order.getOrderId() + ": " + reason);
+        
+        order.setPaymentStatus("FAILED");
+        order.setOrderStatus("CANCELLED");
+        orderRepository.save(order);
+        
+        saveHistory(order, "ORDER_CANCELLED_PAYMENT_FAILURE", "SYSTEM");
+
+        // Compensating Transaction: Restore the Stock
+        try {
+            inventoryClient.addStock(stockUpdates);
+            System.out.println("Stock restored successfully for order: " + order.getOrderId());
+        } catch (Exception e) {
+            // Critical error: Data inconsistency manually requires attention
+            System.err.println("CRITICAL: Failed to restore stock for order " + order.getOrderId() + " - " + e.getMessage());
+        }
     }
 
     private void saveHistory(Order order, String status, String changedBy) {

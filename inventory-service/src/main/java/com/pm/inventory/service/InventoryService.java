@@ -55,11 +55,9 @@ public class InventoryService {
     @Transactional
     public void reduceStock(List<StockUpdateDTO> updates) {
         for (StockUpdateDTO update : updates) {
-            // Use findByVariantId (Make sure your repo has this)
             Inventory inventory = inventoryRepository.findByVariantId(update.getVariantId())
                     .orElseThrow(() -> new RuntimeException("Product variant not found in inventory: " + update.getVariantId()));
 
-            // Check against availableQuantity (Match your entity field)
             if (inventory.getAvailableQuantity() < update.getQuantity()) {
                 throw new RuntimeException("Insufficient stock for variant ID: " + update.getVariantId() 
                     + ". Available: " + inventory.getAvailableQuantity());
@@ -70,6 +68,23 @@ public class InventoryService {
 
             // Audit Trail for Sale
             logTransaction(inventory.getProductId(), update.getVariantId(), update.getQuantity(), "ORDER_PLACE", InventoryTransaction.TransactionType.SALE);
+        }
+    }
+
+    /**
+     * NEW: Compensating Transaction logic to restore stock when payment fails.
+     */
+    @Transactional
+    public void addStockBulk(List<StockUpdateDTO> updates) {
+        for (StockUpdateDTO update : updates) {
+            Inventory inventory = inventoryRepository.findByVariantId(update.getVariantId())
+                    .orElseThrow(() -> new RuntimeException("Product variant not found for restoration: " + update.getVariantId()));
+
+            inventory.setAvailableQuantity(inventory.getAvailableQuantity() + update.getQuantity());
+            inventoryRepository.save(inventory);
+
+            // Audit Trail for Restoration (using PURCHASE or ADJUSTMENT type)
+            logTransaction(inventory.getProductId(), update.getVariantId(), update.getQuantity(), "PAYMENT_FAILURE_RESTORE", InventoryTransaction.TransactionType.PURCHASE);
         }
     }
 

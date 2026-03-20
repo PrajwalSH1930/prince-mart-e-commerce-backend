@@ -1,6 +1,6 @@
 package com.pm.order.client;
 
-import com.pm.order.dto.StockUpdateDTO; // Create this DTO in Order Service too
+import com.pm.order.dto.StockUpdateDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,4 +11,8 @@ public interface InventoryClient {
     
     @PostMapping("/inventory/reduce-stock")
     void reduceStock(@RequestBody List<StockUpdateDTO> updates);
+
+    // New endpoint for compensating transactions (restoring stock)
+    @PostMapping("/inventory/add-stock-bulk")
+    void addStock(@RequestBody List<StockUpdateDTO> updates);
 }
