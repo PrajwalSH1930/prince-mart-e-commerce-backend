@@ -50,4 +50,15 @@ public class OrderController {
         Order updatedOrder = orderService.updateStatus(orderId, paymentStatus, orderStatus);
         return ResponseEntity.ok(updatedOrder);
     }
+    
+ // Inside OrderController.java
+
+    @GetMapping("/check-purchase/{userId}/{productId}")
+    public ResponseEntity<Boolean> hasPurchasedProduct(
+            @PathVariable Long userId, 
+            @PathVariable Long productId) {
+        
+        boolean purchased = orderService.checkUserPurchasedProduct(userId, productId);
+        return ResponseEntity.ok(purchased);
+    }
 }
