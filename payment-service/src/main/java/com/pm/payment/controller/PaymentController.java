@@ -25,4 +25,12 @@ public class PaymentController {
     public String welcome() {
 		return "Welcome!! This is the Payment Service for Prince Mart by Prince Inc.";
 	}
+    
+    @PostMapping("/verify")
+    public ResponseEntity<String> verifyPayment(@RequestParam String orderId, @RequestParam String paymentId) {
+        // In a real app, we verify the 'razorpay_signature' here.
+        // For now, let's manually trigger the success handshake!
+        paymentService.completePaymentManually(orderId, paymentId);
+        return ResponseEntity.ok("Payment Verified and Order Confirmed!");
+    }
 }

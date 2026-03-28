@@ -42,4 +42,13 @@ public class OrderController {
             @RequestHeader("X-User-Id") Long userId) {
         return ResponseEntity.ok(orderService.getOrderDetails(orderId, userId));
     }
+    
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<String> updateStatus(
+            @PathVariable Long orderId,
+            @RequestParam String paymentStatus,
+            @RequestParam String orderStatus) {
+        orderService.updateStatus(orderId, paymentStatus, orderStatus);
+        return ResponseEntity.ok("Order status updated");
+    }
 }
