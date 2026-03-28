@@ -7,6 +7,7 @@ import com.pm.payment.dto.OrderResponse;
 import com.pm.payment.dto.PaymentRequest;
 import com.pm.payment.dto.PaymentResponse;
 import com.pm.payment.entity.Payment;
+import com.pm.payment.exception.ResourceNotFoundException;
 import com.pm.payment.repository.PaymentRepository;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
@@ -78,7 +79,7 @@ public class PaymentService {
     @Transactional
     public void completePaymentManually(String razorpayOrderId, String paymentId) {
         Payment payment = paymentRepository.findByTransactionId(razorpayOrderId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
         payment.setStatus("COMPLETED");
         paymentRepository.save(payment);

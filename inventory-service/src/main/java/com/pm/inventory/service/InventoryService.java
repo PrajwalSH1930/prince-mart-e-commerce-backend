@@ -56,10 +56,10 @@ public class InventoryService {
     public void reduceStock(List<StockUpdateDTO> updates) {
         for (StockUpdateDTO update : updates) {
             Inventory inventory = inventoryRepository.findByVariantId(update.getVariantId())
-                    .orElseThrow(() -> new RuntimeException("Product variant not found in inventory: " + update.getVariantId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product variant not found in inventory: " + update.getVariantId()));
 
             if (inventory.getAvailableQuantity() < update.getQuantity()) {
-                throw new RuntimeException("Insufficient stock for variant ID: " + update.getVariantId() 
+                throw new ResourceNotFoundException("Insufficient stock for variant ID: " + update.getVariantId() 
                     + ". Available: " + inventory.getAvailableQuantity());
             }
 
@@ -78,7 +78,7 @@ public class InventoryService {
     public void addStockBulk(List<StockUpdateDTO> updates) {
         for (StockUpdateDTO update : updates) {
             Inventory inventory = inventoryRepository.findByVariantId(update.getVariantId())
-                    .orElseThrow(() -> new RuntimeException("Product variant not found for restoration: " + update.getVariantId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Product variant not found for restoration: " + update.getVariantId()));
 
             inventory.setAvailableQuantity(inventory.getAvailableQuantity() + update.getQuantity());
             inventoryRepository.save(inventory);

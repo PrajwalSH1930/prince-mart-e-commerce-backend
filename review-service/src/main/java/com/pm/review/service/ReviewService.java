@@ -7,6 +7,7 @@ import com.pm.review.dto.ReviewRequest;
 import com.pm.review.dto.ReviewResponse;
 import com.pm.review.dto.UserResponse; // Added missing import
 import com.pm.review.entity.Review;
+import com.pm.review.exception.ResourceNotFoundException;
 import com.pm.review.repository.ReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,12 +34,12 @@ public class ReviewService {
         // 1. Rule Check: Did they buy it?
         boolean purchased = orderClient.hasPurchasedProduct(userId, request.getProductId());
         if (!purchased) {
-            throw new RuntimeException("Sorry, you can only review products you have actually purchased from Prince Mart.");
+            throw new ResourceNotFoundException("Sorry, you can only review products you have actually purchased from Prince Mart.");
         }
 
         // 2. Rule Check: Already reviewed?
         if (reviewRepository.existsByUserIdAndProductId(userId, request.getProductId())) {
-            throw new RuntimeException("You have already reviewed this product.");
+            throw new ResourceNotFoundException("You have already reviewed this product.");
         }
 
         // 3. Map and Save
