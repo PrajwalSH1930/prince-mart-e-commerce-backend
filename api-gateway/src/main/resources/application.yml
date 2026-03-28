@@ -58,6 +58,13 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: shipping-service
+          uri: lb://SHIPPING-SERVICE
+          predicates:
+            - Path=/shipments/**
+          filters:
+            - AuthenticationFilter
+
 eureka:
   instance:
     prefer-ip-address: true

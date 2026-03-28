@@ -1,7 +1,12 @@
 package com.pm.notification.controller;
 
 import com.pm.notification.dto.NotificationRequest;
+import com.pm.notification.entity.Notification;
 import com.pm.notification.service.NotificationService;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +28,25 @@ public class NotificationController {
     public String sendConfirmation(@RequestBody NotificationRequest request) {
         notificationService.sendOrderConfirmation(request);
         return "Notification Processed";
+    }
+    
+    @GetMapping("/all")
+    public ResponseEntity<List<Notification>> getAllNotifications() {
+		List<Notification> notifications = notificationService.getAllNotifications();
+		return ResponseEntity.ok(notifications);
+	}
+    
+    @PostMapping("/send")
+    public ResponseEntity<String> sendNotification(@RequestBody NotificationRequest request) {
+        System.out.println("DEBUG: Received notification request for: " + request.getRecipient());
+        notificationService.sendOrderConfirmation(request);
+        return ResponseEntity.ok("Notification processed successfully");
+    }
+    
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Notification>> getUserNotifications(@PathVariable Long userId) {
+    			List<Notification> notifications = notificationService.getNotificationsForUser(userId);
+    					return ResponseEntity.ok(notifications);
     }
     
     @GetMapping("/test-email")

@@ -24,7 +24,8 @@ public class OrderService {
     private final InventoryClient inventoryClient;
     private final AddressClient addressClient;
     private final PaymentClient paymentClient;
-    private final UserClient userClient; // Added
+    private final UserClient userClient;
+    private final ShippingClient shippingClient; 
 
     public OrderService(OrderRepository orderRepository,
                         OrderStatusHistoryRepository historyRepository,
@@ -32,7 +33,8 @@ public class OrderService {
                         InventoryClient inventoryClient,
                         AddressClient addressClient,
                         PaymentClient paymentClient,
-                        UserClient userClient) {
+                        UserClient userClient,
+                        ShippingClient shippingClient) {
         this.orderRepository = orderRepository;
         this.historyRepository = historyRepository;
         this.cartClient = cartClient;
@@ -40,20 +42,18 @@ public class OrderService {
         this.addressClient = addressClient;
         this.paymentClient = paymentClient;
         this.userClient = userClient;
+        this.shippingClient = shippingClient;
     }
 
     @Transactional
     public Order placeOrder(Long userId, OrderRequest request) {
-        // 1. Fetch Cart
         CartResponse cart = cartClient.getMyCart(userId);
         if (cart == null || cart.getItems().isEmpty()) {
             throw new RuntimeException("Cannot place order: Cart is empty");
         }
 
-        // 2. Fetch User Details from Identity Service
         UserResponse user = userClient.getUserById(userId);
 
-        // 3. Create Address Snapshot
         AddressResponse address = addressClient.getAddressById(request.getShippingAddressId());
         String snapshot = String.format("%s\n%s, %s\n%s, %s, %s - %s\nPhone: %s",
                 address.getFullName(),
@@ -65,11 +65,10 @@ public class OrderService {
                 address.getPostalCode(),
                 address.getPhone());
 
-        // 4. Map Order
         Order order = new Order();
         order.setUserId(userId);
-        order.setCustomerName(user.getFullName()); // Saving real name
-        order.setUserEmail(user.getEmail());       // Saving real email
+        order.setCustomerName(user.getFullName());
+        order.setUserEmail(user.getEmail());
         order.setOrderStatus("PENDING");
         order.setPaymentStatus("UNPAID");
         order.setCurrency(request.getCurrency());
@@ -95,7 +94,6 @@ public class OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         order.setTotalAmount(total);
 
-        // 5. Save and Update Stock
         Order savedOrder = orderRepository.save(order);
         saveHistory(savedOrder, "PENDING", "SYSTEM");
 
@@ -109,14 +107,12 @@ public class OrderService {
             throw new RuntimeException("Inventory update failed: " + e.getMessage());
         }
 
-        // 6. Clear Cart
         try {
             cartClient.clearCart(userId);
         } catch (Exception e) {
             System.err.println("Non-critical error: Failed to clear cart - " + e.getMessage());
         }
 
-        // 7. Request RazorPay Order
         PaymentRequest paymentRequest = new PaymentRequest(
                 savedOrder.getOrderId(),
                 savedOrder.getTotalAmount(),
@@ -126,18 +122,13 @@ public class OrderService {
 
         try {
             PaymentResponse paymentResponse = paymentClient.process(paymentRequest);
-            
             if ("CREATED".equalsIgnoreCase(paymentResponse.getPaymentStatus()) || 
                 "COMPLETED".equalsIgnoreCase(paymentResponse.getPaymentStatus())) {
-                
                 savedOrder.setTransactionId(paymentResponse.getTransactionId());
                 orderRepository.save(savedOrder);
-                System.out.println("RazorPay Order Created ID: " + paymentResponse.getTransactionId());
-                
             } else {
                 handlePaymentFailure(savedOrder, stockUpdates, "Payment Rejected by Gateway");
             }
-            
         } catch (Exception e) {
             handlePaymentFailure(savedOrder, stockUpdates, "Payment Service Connection Error: " + e.getMessage());
         }
@@ -154,7 +145,6 @@ public class OrderService {
 
         try {
             inventoryClient.addStock(stockUpdates);
-            System.out.println("Stock restored successfully for order: " + order.getOrderId());
         } catch (Exception e) {
             System.err.println("CRITICAL: Failed to restore stock - " + e.getMessage());
         }
@@ -168,6 +158,37 @@ public class OrderService {
         historyRepository.save(history);
     }
 
+    @Transactional
+    public Order updateStatus(Long orderId, String paymentStatus, String orderStatus) {
+        System.out.println("DEBUG: updateStatus called for Order: " + orderId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        
+        order.setPaymentStatus(paymentStatus);
+        order.setOrderStatus(orderStatus);
+        Order updatedOrder = orderRepository.save(order);
+        
+        saveHistory(updatedOrder, orderStatus, "PAYMENT_SERVICE");
+
+        if ("CONFIRMED".equalsIgnoreCase(orderStatus.trim())) {
+            try {
+                System.out.println("DEBUG: Triggering Shipping with Customer Info...");
+                // Pass Name and Email along with Order ID
+                shippingClient.initiateShipment(
+                    orderId, 
+                    updatedOrder.getCustomerName(), 
+                    updatedOrder.getUserEmail()
+                );
+                System.out.println("DEBUG: Shipping Service call successful!");
+            } catch (Exception e) {
+                System.err.println("DEBUG: Shipping Trigger Failed! Error: " + e.getMessage());
+            }
+        }
+
+        return updatedOrder; 
+    }
+
     public List<Order> getOrderHistory(Long userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
@@ -179,18 +200,5 @@ public class OrderService {
             throw new RuntimeException("Unauthorized");
         }
         return order;
-    }
-    
-    @Transactional
-    public Order updateStatus(Long orderId, String paymentStatus, String orderStatus) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-        
-        order.setPaymentStatus(paymentStatus);
-        order.setOrderStatus(orderStatus);
-        Order updatedOrder = orderRepository.save(order);
-        
-        saveHistory(updatedOrder, orderStatus, "PAYMENT_SERVICE");
-        return updatedOrder; 
     }
 }
