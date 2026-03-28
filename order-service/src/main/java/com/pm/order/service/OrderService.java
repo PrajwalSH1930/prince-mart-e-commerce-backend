@@ -201,4 +201,11 @@ public class OrderService {
         }
         return order;
     }
+    
+ // Inside OrderService.java
+
+    public boolean checkUserPurchasedProduct(Long userId, Long productId) {
+        System.out.println("DEBUG: Checking purchase for User: " + userId + " and Product: " + productId);
+        return orderRepository.existsByUserIdAndProductId(userId, productId);
+    }
 }

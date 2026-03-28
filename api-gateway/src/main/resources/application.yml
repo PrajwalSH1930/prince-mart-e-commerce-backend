@@ -65,6 +65,13 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: review-service
+          uri: lb://REVIEW-SERVICE
+          predicates:
+            - Path=/reviews/**
+          filters:
+            - AuthenticationFilter
+
 eureka:
   instance:
     prefer-ip-address: true
