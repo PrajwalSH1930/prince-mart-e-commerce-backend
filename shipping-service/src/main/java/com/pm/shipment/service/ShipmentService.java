@@ -3,6 +3,7 @@ package com.pm.shipment.service;
 import com.pm.shipment.client.NotificationClient;
 import com.pm.shipment.dto.NotificationRequest;
 import com.pm.shipment.entity.Shipment;
+import com.pm.shipment.exception.ResourceNotFoundException;
 import com.pm.shipment.repository.ShipmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +22,7 @@ public class ShipmentService {
 
     public Shipment getStatusByShipmentId(Long shipmentId) {
         return shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new RuntimeException("Shipment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found"));
     }
     
     @Transactional
@@ -50,7 +51,7 @@ public class ShipmentService {
     @Transactional
     public Shipment updateShipmentStatus(Long shipmentId, String status) {
         Shipment shipment = shipmentRepository.findById(shipmentId)
-                .orElseThrow(() -> new RuntimeException("Shipment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found"));
         
         shipment.setStatus(status.toUpperCase());
         

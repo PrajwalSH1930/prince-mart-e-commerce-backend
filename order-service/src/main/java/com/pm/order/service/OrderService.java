@@ -49,7 +49,7 @@ public class OrderService {
     public Order placeOrder(Long userId, OrderRequest request) {
         CartResponse cart = cartClient.getMyCart(userId);
         if (cart == null || cart.getItems().isEmpty()) {
-            throw new RuntimeException("Cannot place order: Cart is empty");
+            throw new ResourceNotFoundException("Cannot place order: Cart is empty");
         }
 
         UserResponse user = userClient.getUserById(userId);
@@ -104,7 +104,7 @@ public class OrderService {
         try {
             inventoryClient.reduceStock(stockUpdates);
         } catch (Exception e) {
-            throw new RuntimeException("Inventory update failed: " + e.getMessage());
+            throw new ResourceNotFoundException("Inventory update failed: " + e.getMessage());
         }
 
         try {
@@ -188,6 +188,7 @@ public class OrderService {
 
         return updatedOrder; 
     }
+    
 
     public List<Order> getOrderHistory(Long userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
@@ -197,7 +198,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         if (!order.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized");
+            throw new ResourceNotFoundException("Unauthorized");
         }
         return order;
     }
