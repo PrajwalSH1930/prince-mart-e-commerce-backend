@@ -122,49 +122,46 @@ public class OrderService {
                 savedOrder.getOrderId(),
                 savedOrder.getTotalAmount(),
                 savedOrder.getCurrency(),
-                "RAZORPAY" 
+                "PAYPAL" // Changed from RAZORPAY
         );
 
         try {
             PaymentResponse paymentResponse = paymentClient.process(paymentRequest);
             
-            if ("COMPLETED".equalsIgnoreCase(paymentResponse.getPaymentStatus())) {
-                savedOrder.setPaymentStatus("PAID");
-                savedOrder.setOrderStatus("CONFIRMED");
+            // FIX: Check for "CREATED" because PayPal orders are not yet approved by user
+            if ("CREATED".equalsIgnoreCase(paymentResponse.getPaymentStatus()) || 
+                "COMPLETED".equalsIgnoreCase(paymentResponse.getPaymentStatus())) {
+                
                 savedOrder.setTransactionId(paymentResponse.getTransactionId());
+                // We keep order status as PENDING until user approves in Step 11
                 orderRepository.save(savedOrder);
-                saveHistory(savedOrder, "PAYMENT_SUCCESS", "SYSTEM");
+                
+                // Return the order - The "message" field in PaymentResponse 
+                // contains the Approval Link for the frontend!
+                System.out.println("RazorPay Link: " + paymentResponse.getMessage());
+                
             } else {
-                // Payment technically called but returned FAILED status
                 handlePaymentFailure(savedOrder, stockUpdates, "Payment Rejected by Gateway");
             }
             
         } catch (Exception e) {
-            // Service Down / Timeout / Network Issue
             handlePaymentFailure(savedOrder, stockUpdates, "Payment Service Connection Error: " + e.getMessage());
         }
 
         return savedOrder;
     }
 
-    /**
-     * Handles Compensation Logic: Cancels order and restores Inventory Stock
-     */
     private void handlePaymentFailure(Order order, List<StockUpdateDTO> stockUpdates, String reason) {
         System.err.println("Payment failed for order " + order.getOrderId() + ": " + reason);
-        
         order.setPaymentStatus("FAILED");
         order.setOrderStatus("CANCELLED");
         orderRepository.save(order);
-        
         saveHistory(order, "ORDER_CANCELLED_PAYMENT_FAILURE", "SYSTEM");
 
-        // Compensating Transaction: Restore the Stock
         try {
             inventoryClient.addStock(stockUpdates);
             System.out.println("Stock restored successfully for order: " + order.getOrderId());
         } catch (Exception e) {
-            // Critical error: Data inconsistency manually requires attention
             System.err.println("CRITICAL: Failed to restore stock for order " + order.getOrderId() + " - " + e.getMessage());
         }
     }
@@ -193,5 +190,17 @@ public class OrderService {
             throw new RuntimeException("Unauthorized to view this order");
         }
         return order;
+    }
+    
+    @Transactional
+    public void updateStatus(Long orderId, String paymentStatus, String orderStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        
+        order.setPaymentStatus(paymentStatus);
+        order.setOrderStatus(orderStatus);
+        orderRepository.save(order);
+        
+        saveHistory(order, orderStatus, "PAYMENT_SERVICE");
     }
 }

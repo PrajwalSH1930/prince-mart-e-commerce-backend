@@ -44,7 +44,7 @@ spring:
           filters:
             - AuthenticationFilter
 
-        - id: order-service
+        - id: payment-service
           uri: lb://PAYMENT-SERVICE
           predicates:
             - Path=/payments/**
