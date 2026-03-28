@@ -83,27 +83,28 @@ public class PaymentService {
         payment.setStatus("COMPLETED");
         paymentRepository.save(payment);
 
-        // 1. Handshake: Get the real User Email and Name from Order Service
+        // 1. Handshake: Get the real User Email, Name, and UserID from Order Service
         OrderResponse orderInfo = orderClient.updateOrderStatus(payment.getOrderId(), "PAID", "CONFIRMED");
         System.out.println("Handshake successful for Order: " + payment.getOrderId());
 
         // 2. Trigger Notification with ACTUAL user data
         NotificationRequest emailReq = new NotificationRequest();
         
-        // No more test emails! We use the data returned from Order Service
+        // Map the userId so the Notification Service can create an Audit Log entry
+        emailReq.setUserId(orderInfo.getUserId()); 
         emailReq.setRecipient(orderInfo.getUserEmail()); 
-        
         emailReq.setSubject("Order Confirmed - Prince Mart");
         emailReq.setCustomerName(orderInfo.getCustomerName()); 
         emailReq.setOrderId(payment.getOrderId().toString());
         emailReq.setAmount(payment.getAmount().toString());
 
         try {
-            System.out.println("Sending real email to: " + orderInfo.getUserEmail());
+            System.out.println("Triggering notification for User ID: " + orderInfo.getUserId());
             notificationClient.sendConfirmation(emailReq);
-            System.out.println("Notification sent successfully!");
+            System.out.println("Notification trigger sent successfully!");
         } catch (Exception e) {
-            System.err.println("Non-critical Error: Failed to send email - " + e.getMessage());
+            // Non-critical: Payment is confirmed even if the notification trigger fails
+            System.err.println("Non-critical Error: Failed to trigger notification - " + e.getMessage());
         }
     }
 }
