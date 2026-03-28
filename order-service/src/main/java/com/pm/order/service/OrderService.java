@@ -1,9 +1,6 @@
 package com.pm.order.service;
 
-import com.pm.order.client.AddressClient;
-import com.pm.order.client.CartClient;
-import com.pm.order.client.InventoryClient;
-import com.pm.order.client.PaymentClient;
+import com.pm.order.client.*;
 import com.pm.order.dto.*;
 import com.pm.order.entity.Order;
 import com.pm.order.entity.OrderItem;
@@ -27,30 +24,36 @@ public class OrderService {
     private final InventoryClient inventoryClient;
     private final AddressClient addressClient;
     private final PaymentClient paymentClient;
+    private final UserClient userClient; // Added
 
     public OrderService(OrderRepository orderRepository,
                         OrderStatusHistoryRepository historyRepository,
                         CartClient cartClient,
                         InventoryClient inventoryClient,
                         AddressClient addressClient,
-                        PaymentClient paymentClient) {
+                        PaymentClient paymentClient,
+                        UserClient userClient) {
         this.orderRepository = orderRepository;
         this.historyRepository = historyRepository;
         this.cartClient = cartClient;
         this.inventoryClient = inventoryClient;
         this.addressClient = addressClient;
         this.paymentClient = paymentClient;
+        this.userClient = userClient;
     }
 
     @Transactional
     public Order placeOrder(Long userId, OrderRequest request) {
-        // 1. Fetch Cart from Cart Service via Feign
+        // 1. Fetch Cart
         CartResponse cart = cartClient.getMyCart(userId);
         if (cart == null || cart.getItems().isEmpty()) {
             throw new RuntimeException("Cannot place order: Cart is empty");
         }
 
-        // 2. Fetch Address from Identity Service & Create Snapshot
+        // 2. Fetch User Details from Identity Service
+        UserResponse user = userClient.getUserById(userId);
+
+        // 3. Create Address Snapshot
         AddressResponse address = addressClient.getAddressById(request.getShippingAddressId());
         String snapshot = String.format("%s\n%s, %s\n%s, %s, %s - %s\nPhone: %s",
                 address.getFullName(),
@@ -62,9 +65,11 @@ public class OrderService {
                 address.getPostalCode(),
                 address.getPhone());
 
-        // 3. Create Order Entity
+        // 4. Map Order
         Order order = new Order();
         order.setUserId(userId);
+        order.setCustomerName(user.getFullName()); // Saving real name
+        order.setUserEmail(user.getEmail());       // Saving real email
         order.setOrderStatus("PENDING");
         order.setPaymentStatus("UNPAID");
         order.setCurrency(request.getCurrency());
@@ -72,7 +77,6 @@ public class OrderService {
         order.setBillingAddressId(request.getBillingAddressId());
         order.setShippingAddressSnapshot(snapshot); 
 
-        // 4. Map Cart Items to Order Items
         List<OrderItem> orderItems = cart.getItems().stream().map(cartItem -> {
             OrderItem item = new OrderItem();
             item.setOrder(order);
@@ -86,19 +90,15 @@ public class OrderService {
 
         order.setItems(orderItems);
 
-        // 5. Calculate Total Amount
         BigDecimal total = orderItems.stream()
                 .map(OrderItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         order.setTotalAmount(total);
 
-        // 6. Save Order
+        // 5. Save and Update Stock
         Order savedOrder = orderRepository.save(order);
-
-        // 7. Record Initial History
         saveHistory(savedOrder, "PENDING", "SYSTEM");
 
-        // 8. Reduce Stock in Inventory Service
         List<StockUpdateDTO> stockUpdates = savedOrder.getItems().stream()
                 .map(item -> new StockUpdateDTO(item.getVariantId(), item.getQuantity()))
                 .collect(Collectors.toList());
@@ -109,36 +109,30 @@ public class OrderService {
             throw new RuntimeException("Inventory update failed: " + e.getMessage());
         }
 
-        // 9. Clear the cart via Feign
+        // 6. Clear Cart
         try {
             cartClient.clearCart(userId);
-            System.out.println("Cart cleared successfully for user: " + userId);
         } catch (Exception e) {
             System.err.println("Non-critical error: Failed to clear cart - " + e.getMessage());
         }
 
-        // 10. Process Payment via Payment Service
+        // 7. Request RazorPay Order
         PaymentRequest paymentRequest = new PaymentRequest(
                 savedOrder.getOrderId(),
                 savedOrder.getTotalAmount(),
                 savedOrder.getCurrency(),
-                "PAYPAL" // Changed from RAZORPAY
+                "RAZORPAY" 
         );
 
         try {
             PaymentResponse paymentResponse = paymentClient.process(paymentRequest);
             
-            // FIX: Check for "CREATED" because PayPal orders are not yet approved by user
             if ("CREATED".equalsIgnoreCase(paymentResponse.getPaymentStatus()) || 
                 "COMPLETED".equalsIgnoreCase(paymentResponse.getPaymentStatus())) {
                 
                 savedOrder.setTransactionId(paymentResponse.getTransactionId());
-                // We keep order status as PENDING until user approves in Step 11
                 orderRepository.save(savedOrder);
-                
-                // Return the order - The "message" field in PaymentResponse 
-                // contains the Approval Link for the frontend!
-                System.out.println("RazorPay Link: " + paymentResponse.getMessage());
+                System.out.println("RazorPay Order Created ID: " + paymentResponse.getTransactionId());
                 
             } else {
                 handlePaymentFailure(savedOrder, stockUpdates, "Payment Rejected by Gateway");
@@ -162,7 +156,7 @@ public class OrderService {
             inventoryClient.addStock(stockUpdates);
             System.out.println("Stock restored successfully for order: " + order.getOrderId());
         } catch (Exception e) {
-            System.err.println("CRITICAL: Failed to restore stock for order " + order.getOrderId() + " - " + e.getMessage());
+            System.err.println("CRITICAL: Failed to restore stock - " + e.getMessage());
         }
     }
 
@@ -175,32 +169,28 @@ public class OrderService {
     }
 
     public List<Order> getOrderHistory(Long userId) {
-        List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        if (orders.isEmpty()) {
-            throw new ResourceNotFoundException("No orders found for user: " + userId);
-        }
-        return orders;
+        return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     public Order getOrderDetails(Long orderId, Long userId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with ID: " + orderId));
-
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         if (!order.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized to view this order");
+            throw new RuntimeException("Unauthorized");
         }
         return order;
     }
     
     @Transactional
-    public void updateStatus(Long orderId, String paymentStatus, String orderStatus) {
+    public Order updateStatus(Long orderId, String paymentStatus, String orderStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
         
         order.setPaymentStatus(paymentStatus);
         order.setOrderStatus(orderStatus);
-        orderRepository.save(order);
+        Order updatedOrder = orderRepository.save(order);
         
-        saveHistory(order, orderStatus, "PAYMENT_SERVICE");
+        saveHistory(updatedOrder, orderStatus, "PAYMENT_SERVICE");
+        return updatedOrder; 
     }
 }

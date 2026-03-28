@@ -37,6 +37,12 @@ public class Order {
     @Column(name="billing_address_id")
     private Long billingAddressId;
 
+    @Column(name="customer_name")
+    private String customerName; // NEW: To store name from Identity Service
+
+    @Column(name="user_email")
+    private String userEmail; 
+    
     @CreationTimestamp
     @Column(name="created_at")
     private LocalDateTime createdAt;
@@ -146,25 +152,45 @@ public class Order {
     }
 
     // Updated Constructor
-    public Order(Long orderId, Long userId, String orderStatus, String paymentStatus, String transactionId, BigDecimal totalAmount,
-            String currency, Long shippingAddressId, Long billingAddressId, LocalDateTime createdAt, String shippingAddressSnapshot,
-            List<OrderItem> items) {
-        super();
-        this.orderId = orderId;
-        this.userId = userId;
-        this.orderStatus = orderStatus;
-        this.paymentStatus = paymentStatus;
-        this.transactionId = transactionId;
-        this.totalAmount = totalAmount;
-        this.currency = currency;
-        this.shippingAddressId = shippingAddressId;
-        this.billingAddressId = billingAddressId;
-        this.createdAt = createdAt;
-        this.items = items;
-        this.shippingAddressSnapshot = shippingAddressSnapshot;
-    }
+    
 
     public Order() {
         super();
     }
+
+	public Order(Long orderId, Long userId, String orderStatus, String paymentStatus, String transactionId,
+			BigDecimal totalAmount, String currency, Long shippingAddressId, Long billingAddressId, String customerName,
+			String userEmail, LocalDateTime createdAt, List<OrderItem> items, String shippingAddressSnapshot) {
+		super();
+		this.orderId = orderId;
+		this.userId = userId;
+		this.orderStatus = orderStatus;
+		this.paymentStatus = paymentStatus;
+		this.transactionId = transactionId;
+		this.totalAmount = totalAmount;
+		this.currency = currency;
+		this.shippingAddressId = shippingAddressId;
+		this.billingAddressId = billingAddressId;
+		this.customerName = customerName;
+		this.userEmail = userEmail;
+		this.createdAt = createdAt;
+		this.items = items;
+		this.shippingAddressSnapshot = shippingAddressSnapshot;
+	}
+
+	public String getCustomerName() {
+		return customerName;
+	}
+
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+
+	public String getUserEmail() {
+		return userEmail;
+	}
+
+	public void setUserEmail(String userEmail) {
+		this.userEmail = userEmail;
+	}
 }
