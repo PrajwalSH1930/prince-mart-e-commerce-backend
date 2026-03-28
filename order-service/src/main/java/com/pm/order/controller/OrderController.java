@@ -3,11 +3,9 @@ package com.pm.order.controller;
 import com.pm.order.dto.OrderRequest;
 import com.pm.order.entity.Order;
 import com.pm.order.service.OrderService;
-
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/orders")
@@ -21,7 +19,7 @@ public class OrderController {
     
     @GetMapping("/welcome")
     public String welcome() {
-    	return "Welcome!! This is the Order Service for Prince Mart by Prince Inc.";
+        return "Welcome!! This is the Order Service for Prince Mart by Prince Inc.";
     }
 
     @PostMapping("/place")
@@ -44,11 +42,12 @@ public class OrderController {
     }
     
     @PutMapping("/{orderId}/status")
-    public ResponseEntity<String> updateStatus(
+    public ResponseEntity<Order> updateStatus(
             @PathVariable Long orderId,
             @RequestParam String paymentStatus,
             @RequestParam String orderStatus) {
-        orderService.updateStatus(orderId, paymentStatus, orderStatus);
-        return ResponseEntity.ok("Order status updated");
+        // Now returns the Order object which contains the userId needed for notifications
+        Order updatedOrder = orderService.updateStatus(orderId, paymentStatus, orderStatus);
+        return ResponseEntity.ok(updatedOrder);
     }
 }
