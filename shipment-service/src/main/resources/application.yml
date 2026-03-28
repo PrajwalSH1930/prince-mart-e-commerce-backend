@@ -1,0 +1,41 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: SHIPMENT-SERVICE
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/pm_shipment_db
+    username: root
+    password: Sprince1*
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: princemart.princeinc@gmail.com
+    password: lbxzbvbngbpacaas
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

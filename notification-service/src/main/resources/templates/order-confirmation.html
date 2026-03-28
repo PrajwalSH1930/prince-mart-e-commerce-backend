@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <body style="margin:0; padding:0; background-color:#eef2f7; font-family:Segoe UI, Arial, sans-serif;">
 
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:20px; border-radius:12px;">
@@ -8,59 +8,69 @@
 
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; overflow:hidden;">
 
-    <!-- HEADER -->
     <tr>
         <td align="center" style="background:linear-gradient(135deg,#1e3c72,#2a5298); padding:40px 20px 20px 20px;">
             <img src="https://drive.google.com/uc?export=view&id=1HkBB_xttRPsJZ9Lt8Ddq36_CiHOcb6iC" width="110" style="margin-bottom: 15px; display:block; border-radius:10px;">
-            <h1 style="color:#ffffff; margin:0; font-size:24px;">Order Confirmed 🎉</h1>
+            
+            <h1 style="color:#ffffff; margin:0; font-size:24px;" th:if="${amount == 'PACKING'}">Order Confirmed 🎉</h1>
+            <h1 style="color:#ffffff; margin:0; font-size:24px;" th:if="${amount == 'SHIPPED'}">Order Shipped! 🚚</h1>
+            <h1 style="color:#ffffff; margin:0; font-size:24px;" th:if="${amount == 'OUT_FOR_DELIVERY'}">Out for Delivery! 📍</h1>
+            <h1 style="color:#ffffff; margin:0; font-size:24px;" th:if="${amount == 'DELIVERED'}">Order Delivered! 🏁</h1>
+            
             <p style="color:#dfe6f1; margin-top:8px; font-size:14px;">Thank you for shopping with <strong>Prince Mart</strong></p>
         </td>
     </tr>
 
-    <!-- CONTENT -->
     <tr>
         <td style="padding:20px; color:#333333;">
 
             <p style="font-size:16px;">Hi <strong th:text="${customerName}">User</strong>,</p>
 
             <p style="font-size:15px; line-height:1.6;">
-                Your order has been successfully placed and is now being processed. 
-                We’re getting everything ready for shipment 🚚
+                <span th:if="${amount == 'PACKING'}">Your order has been successfully placed and is now being processed. We’re getting everything ready for shipment!</span>
+                <span th:if="${amount == 'SHIPPED'}">Great news! Your order has left our warehouse and is on its way to you.</span>
+                <span th:if="${amount == 'OUT_FOR_DELIVERY'}">Your package is with our delivery partner and will reach you very soon!</span>
+                <span th:if="${amount == 'DELIVERED'}">Your order has been successfully delivered. We hope you love your purchase!</span>
             </p>
 
-            <!-- ORDER CARD -->
             <table width="100%" cellpadding="0" cellspacing="0" 
                    style="background:#f8fafc; border:1px solid #e3e8ef; border-radius:10px; padding:20px; margin:25px 0;">
                 <tr>
                     <td style="font-size:14px; line-height:1.8;">
                         <strong style="color:#1e3c72;">Order ID:</strong> #<span th:text="${orderId}">000</span><br>
-                        <strong style="color:#1e3c72;">Total Paid:</strong> ₹<span th:text="${amount}">0.00</span><br>
-                        <strong style="color:#1e3c72;">Status:</strong> Processing
+                        <strong style="color:#1e3c72;">Status:</strong> <span th:text="${amount}" style="text-transform: capitalize;">Status</span>
                     </td>
                 </tr>
             </table>
 
-            <!-- STATUS TRACK -->
             <table width="100%" style="margin:25px 0; text-align:center;">
                 <tr>
                     <td style="font-size:12px; color:#2a5298;">✔ Order Placed</td>
-                    <td style="font-size:12px; color:#999;">➝ Packed</td>
-                    <td style="font-size:12px; color:#999;">➝ Shipped</td>
-                    <td style="font-size:12px; color:#999;">➝ Delivered</td>
+                    
+                    <td th:style="${amount == 'PACKING' or amount == 'SHIPPED' or amount == 'OUT_FOR_DELIVERY' or amount == 'DELIVERED'} ? 'font-size:12px; color:#2a5298;' : 'font-size:12px; color:#999;'">
+                        ➝ Packed
+                    </td>
+                    
+                    <td th:style="${amount == 'SHIPPED' or amount == 'OUT_FOR_DELIVERY' or amount == 'DELIVERED'} ? 'font-size:12px; color:#2a5298;' : 'font-size:12px; color:#999;'">
+                        ➝ Shipped
+                    </td>
+                    
+                    <td th:style="${amount == 'DELIVERED'} ? 'font-size:12px; color:#2a5298;' : 'font-size:12px; color:#999;'">
+                        ➝ Delivered
+                    </td>
                 </tr>
             </table>
 
-            <!-- CTA BUTTON -->
             <div style="text-align:center; margin:30px 0;">
-                <a href="#" 
+                <a th:href="@{'http://localhost:3000/orders/' + ${orderId}}" 
                    style="background:#2a5298; color:#ffffff; padding:14px 30px; 
                           text-decoration:none; border-radius:6px; font-size:15px; font-weight:bold; display:inline-block;">
                     Track Your Order
                 </a>
             </div>
 
-            <p style="font-size:14px; line-height:1.6;">
-                We’ll send you another update once your order is shipped.
+            <p style="font-size:14px; line-height:1.6;" th:if="${amount != 'DELIVERED'}">
+                We’ll send you another update once your order status changes.
             </p>
 
             <p style="font-size:12px; text-align:center; color:#555;">
@@ -70,7 +80,6 @@
         </td>
     </tr>
 
-    <!-- FOOTER -->
     <tr>
         <td style="background:#f4f6f9; text-align:center; padding:25px; font-size:12px; color:#777;">
             
@@ -94,4 +103,4 @@
 </table>
 
 </body>
-</html> 
+</html>

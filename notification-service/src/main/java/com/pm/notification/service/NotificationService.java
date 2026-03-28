@@ -4,6 +4,9 @@ import com.pm.notification.dto.NotificationRequest;
 import com.pm.notification.entity.Notification;
 import com.pm.notification.repository.NotificationRepository;
 import jakarta.mail.internet.MimeMessage;
+
+import java.util.List;
+
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,14 @@ public class NotificationService {
         this.templateEngine = templateEngine;
         this.notificationRepository = notificationRepository;
     }
+    
+    public List<Notification> getNotificationsForUser(Long userId) {
+		return notificationRepository.findByUserIdOrderBySentAtDesc(userId);
+	}
+    
+    public List<Notification> getAllNotifications() {
+		return notificationRepository.findAll();
+	}
 
     public void sendOrderConfirmation(NotificationRequest request) {
         // Initialize the log entity
