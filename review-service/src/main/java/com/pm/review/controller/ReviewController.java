@@ -44,4 +44,10 @@ public class ReviewController {
     public ResponseEntity<List<ReviewResponse>> getAllReviews() {
 		return ResponseEntity.ok(reviewService.getAllReviews());
 	}
+    
+    @GetMapping("/welcome")
+    public ResponseEntity<String> welcome() {
+    			return ResponseEntity.ok("Welcome!! This is the Review Service for Prince Mart by Prince Inc.");
+    			
+    }
 }

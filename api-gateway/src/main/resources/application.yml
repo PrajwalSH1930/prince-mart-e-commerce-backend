@@ -72,6 +72,12 @@ spring:
           filters:
             - AuthenticationFilter
 
+        - id: wishlist-service
+          uri: lb://WISHLIST-SERVICE
+          predicates:
+            - Path=/wishlist/**
+          filters:
+            - AuthenticationFilter
 eureka:
   instance:
     prefer-ip-address: true
