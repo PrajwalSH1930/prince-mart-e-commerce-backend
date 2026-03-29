@@ -1,10 +1,9 @@
 package com.pm.wishlist.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pm.wishlist.client.AuditClient; // New client
 import com.pm.wishlist.client.ProductClient;
-import com.pm.wishlist.dto.ProductResponse;
-import com.pm.wishlist.dto.ProductVariantResponse;
-import com.pm.wishlist.dto.WishlistRequest;
-import com.pm.wishlist.dto.WishlistResponse;
+import com.pm.wishlist.dto.*; // New DTO
 import com.pm.wishlist.entity.Wishlist;
 import com.pm.wishlist.entity.WishlistItem;
 import com.pm.wishlist.repository.WishlistItemRepository;
@@ -21,13 +20,19 @@ public class WishlistService {
     private final WishlistRepository wishlistRepository;
     private final WishlistItemRepository itemRepository;
     private final ProductClient productClient;
+    private final AuditClient auditClient;
+    private final ObjectMapper objectMapper;
 
     public WishlistService(WishlistRepository wishlistRepository, 
                            WishlistItemRepository itemRepository,
-                           ProductClient productClient) {
+                           ProductClient productClient,
+                           AuditClient auditClient,
+                           ObjectMapper objectMapper) {
         this.wishlistRepository = wishlistRepository;
         this.itemRepository = itemRepository;
         this.productClient = productClient;
+        this.auditClient = auditClient;
+        this.objectMapper = objectMapper;
     }
 
     public Wishlist getMyWishlist(Long userId) {
@@ -51,22 +56,36 @@ public class WishlistService {
             item.setWishlist(wishlist);
             item.setProductId(request.getProductId());
             item.setVariantId(request.getVariantId());
-            itemRepository.save(item);
-            wishlist.getItems().add(item);
+            WishlistItem savedItem = itemRepository.save(item);
+            wishlist.getItems().add(savedItem);
+
+            // Audit the addition
+            sendAuditLog(userId, "WISHLIST_ADD_ITEM", null, savedItem);
         }
         return wishlist;
     }
 
     @Transactional
     public void removeItem(Long userId, Long productId) {
+        // Capture data before deletion for audit
+        String dataBefore = "ProductID: " + productId;
+        
         itemRepository.deleteByWishlistUserIdAndProductId(userId, productId);
+        
+        // Audit the removal
+        sendAuditLog(userId, "WISHLIST_REMOVE_ITEM", dataBefore, "REMOVED");
     }
 
     @Transactional
     public void clearWishlist(Long userId) {
         wishlistRepository.findByUserId(userId).ifPresent(wishlist -> {
+            String dataBefore = "Items Count: " + wishlist.getItems().size();
+            
             wishlist.getItems().clear();
             wishlistRepository.save(wishlist);
+            
+            // Audit the clear action
+            sendAuditLog(userId, "WISHLIST_CLEAR_ALL", dataBefore, "EMPTY");
         });
     }
     
@@ -79,19 +98,16 @@ public class WishlistService {
             String image = "";
 
             try {
-                // 1. Fetch Base Product Info
                 ProductResponse product = productClient.getProductById(item.getProductId());
                 if (product != null) {
                     name = product.getName();
                     image = product.getMainImageUrl();
                     
-                    // Fallback: If no specific variant was wishlisted, use first variant price
                     if (item.getVariantId() == null && product.getVariants() != null && !product.getVariants().isEmpty()) {
                         price = product.getVariants().get(0).getPrice();
                     }
                 }
 
-                // 2. Fetch Specific Variant Price if variantId exists
                 if (item.getVariantId() != null) {
                     ProductVariantResponse variant = productClient.getVariantById(item.getVariantId());
                     if (variant != null) {
@@ -102,7 +118,6 @@ public class WishlistService {
                 System.err.println("Feign Call Failed for Item: " + item.getProductId() + " Error: " + e.getMessage());
             }
 
-            // Using the Manual Builder we created in the WishlistResponse DTO
             return WishlistResponse.WishlistItemDto.builder()
                     .wishlistItemId(item.getWishlistItemId())
                     .productId(item.getProductId())
@@ -112,11 +127,28 @@ public class WishlistService {
                     .build();
         }).toList();
 
-        // Using the Manual Builder for the main response
         return WishlistResponse.builder()
                 .wishlistId(wishlist.getWishlistId())
                 .userId(wishlist.getUserId())
                 .items(itemDtos)
                 .build();
+    }
+
+    // Centralized Helper for External Auditing
+    private void sendAuditLog(Long userId, String action, Object dataBefore, Object dataAfter) {
+        try {
+            String before = dataBefore != null ? (dataBefore instanceof String ? (String) dataBefore : objectMapper.writeValueAsString(dataBefore)) : null;
+            String after = dataAfter != null ? (dataAfter instanceof String ? (String) dataAfter : objectMapper.writeValueAsString(dataAfter)) : null;
+
+            auditClient.createLog(new AuditLogRequest(
+                "WISHLIST-SERVICE", 
+                action, 
+                userId, 
+                before, 
+                after
+            ));
+        } catch (Exception e) {
+            System.err.println("Audit logging failed in Wishlist Service: " + e.getMessage());
+        }
     }
 }

@@ -1,8 +1,10 @@
 package com.pm.cart.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper; // For JSON conversion
+import com.pm.cart.client.AuditClient; // Your new client
+import com.pm.cart.dto.AuditLogRequest; // Your new DTO
 import com.pm.cart.entity.Cart;
 import com.pm.cart.entity.CartItem;
-import com.pm.cart.exception.GlobalExceptionHandler;
 import com.pm.cart.exception.ResourceNotFoundException;
 import com.pm.cart.repository.CartRepository;
 import org.springframework.stereotype.Service;
@@ -15,13 +17,16 @@ import java.util.Optional;
 @Service
 public class CartService {
 
-    private final GlobalExceptionHandler globalExceptionHandler;
-
     private final CartRepository cartRepository;
+    private final AuditClient auditClient;
+    private final ObjectMapper objectMapper;
 
-    public CartService(CartRepository cartRepository, GlobalExceptionHandler globalExceptionHandler) {
+    public CartService(CartRepository cartRepository, 
+                       AuditClient auditClient, 
+                       ObjectMapper objectMapper) {
         this.cartRepository = cartRepository;
-        this.globalExceptionHandler = globalExceptionHandler;
+        this.auditClient = auditClient;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -36,18 +41,24 @@ public class CartService {
                     return cartRepository.save(newCart);
                 });
 
+        // Capture state before change
+        String dataBefore = null;
+        try {
+            dataBefore = objectMapper.writeValueAsString(cart);
+        } catch (Exception e) {
+            System.err.println("JSON conversion failed: " + e.getMessage());
+        }
+
         // 2. Check if item already exists in cart
         Optional<CartItem> existingItem = cart.getItems().stream()
                 .filter(item -> item.getVariantId().equals(variantId))
                 .findFirst();
 
         if (existingItem.isPresent()) {
-            // Update quantity
             CartItem item = existingItem.get();
             item.setQuantity(item.getQuantity() + quantity);
-            item.setPriceSnapshot(price); // Update snapshot to latest price
+            item.setPriceSnapshot(price); 
         } else {
-            // Add new item
             CartItem newItem = new CartItem();
             newItem.setCart(cart);
             newItem.setProductId(productId);
@@ -57,7 +68,12 @@ public class CartService {
             cart.getItems().add(newItem);
         }
 
-        return cartRepository.save(cart);
+        Cart savedCart = cartRepository.save(cart);
+
+        // Audit the change
+        sendAuditLog(userId, "ADD_TO_CART", dataBefore, savedCart);
+
+        return savedCart;
     }
 
     public Cart getCartByUserId(Long userId) {
@@ -70,6 +86,11 @@ public class CartService {
         Cart cart = cartRepository.findByUserIdAndStatus(userId, "active")
                 .orElseThrow(() -> new ResourceNotFoundException("Active cart not found"));
 
+        String dataBefore = null;
+        try {
+            dataBefore = objectMapper.writeValueAsString(cart);
+        } catch (Exception e) {}
+
         CartItem item = cart.getItems().stream()
                 .filter(i -> i.getVariantId().equals(variantId))
                 .findFirst()
@@ -81,7 +102,10 @@ public class CartService {
             item.setQuantity(quantity);
         }
 
-        return cartRepository.save(cart);
+        Cart savedCart = cartRepository.save(cart);
+        sendAuditLog(userId, "UPDATE_CART_QUANTITY", dataBefore, savedCart);
+        
+        return savedCart;
     }
 
     @Transactional
@@ -89,9 +113,17 @@ public class CartService {
         Cart cart = cartRepository.findByUserIdAndStatus(userId, "active")
                 .orElseThrow(() -> new ResourceNotFoundException("Active cart not found"));
 
-        cart.getItems().removeIf(item -> item.getVariantId().equals(variantId));
+        String dataBefore = null;
+        try {
+            dataBefore = objectMapper.writeValueAsString(cart);
+        } catch (Exception e) {}
 
-        return cartRepository.save(cart);
+        cart.getItems().removeIf(item -> item.getVariantId().equals(variantId));
+        Cart savedCart = cartRepository.save(cart);
+
+        sendAuditLog(userId, "REMOVE_FROM_CART", dataBefore, savedCart);
+
+        return savedCart;
     }
     
     @Transactional
@@ -99,12 +131,31 @@ public class CartService {
         Cart cart = cartRepository.findByUserIdAndStatus(userId, "active")
                 .orElseThrow(() -> new ResourceNotFoundException("Active cart not found for user: " + userId));
         
-        // Option A: Hard delete items
-        cart.getItems().clear(); 
+        String dataBefore = null;
+        try {
+            dataBefore = objectMapper.writeValueAsString(cart);
+        } catch (Exception e) {}
         
-        // Option B: Change status so the cart is no longer "active"
+        cart.getItems().clear(); 
         cart.setStatus("COMPLETED"); 
         
-        cartRepository.save(cart);
+        Cart savedCart = cartRepository.save(cart);
+        sendAuditLog(userId, "CLEAR_CART_COMPLETED", dataBefore, savedCart);
+    }
+
+    // Helper method to keep main code clean
+    private void sendAuditLog(Long userId, String action, String dataBefore, Cart savedCart) {
+        try {
+            String dataAfter = objectMapper.writeValueAsString(savedCart);
+            auditClient.createLog(new AuditLogRequest(
+                "CART-SERVICE", 
+                action, 
+                userId, 
+                dataBefore, 
+                dataAfter
+            ));
+        } catch (Exception e) {
+            System.err.println("Audit logging failed: " + e.getMessage());
+        }
     }
 }

@@ -1,11 +1,10 @@
 package com.pm.review.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pm.review.client.AuditClient; // New client
 import com.pm.review.client.OrderClient;
 import com.pm.review.client.UserClient;
-import com.pm.review.dto.ProductRatingResponse;
-import com.pm.review.dto.ReviewRequest;
-import com.pm.review.dto.ReviewResponse;
-import com.pm.review.dto.UserResponse; // Added missing import
+import com.pm.review.dto.*;
 import com.pm.review.entity.Review;
 import com.pm.review.exception.ResourceNotFoundException;
 import com.pm.review.repository.ReviewRepository;
@@ -20,13 +19,19 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final OrderClient orderClient;
     private final UserClient userClient;
+    private final AuditClient auditClient; // New
+    private final ObjectMapper objectMapper; // New
 
     public ReviewService(ReviewRepository reviewRepository, 
                          OrderClient orderClient, 
-                         UserClient userClient) {
+                         UserClient userClient,
+                         AuditClient auditClient,
+                         ObjectMapper objectMapper) {
         this.reviewRepository = reviewRepository;
         this.orderClient = orderClient;
         this.userClient = userClient;
+        this.auditClient = auditClient;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -52,7 +57,10 @@ public class ReviewService {
 
         Review savedReview = reviewRepository.save(review);
         
-        // Return a response DTO instead of raw entity for consistency
+        // Audit the review posting
+        sendAuditLog(userId, "POST_REVIEW", null, savedReview);
+        
+        // Return a response DTO
         return mapToResponse(savedReview);
     }
 
@@ -64,7 +72,6 @@ public class ReviewService {
                 .toList();
     }
 
-    // Helper method to keep code clean and handle name fetching
     private ReviewResponse mapToResponse(Review review) {
         String name = "Verified Customer";
         try {
@@ -73,7 +80,6 @@ public class ReviewService {
                 name = user.getFullName();
             }
         } catch (Exception e) {
-            // Fallback to "Verified Customer" if Identity service is down
             System.err.println("Could not fetch user name for ID " + review.getUserId() + ": " + e.getMessage());
         }
 
@@ -97,10 +103,28 @@ public class ReviewService {
     }
     
     public List<ReviewResponse> getAllReviews() {
-    			List<Review> reviews = reviewRepository.findAll();
+        List<Review> reviews = reviewRepository.findAll();
 
-		return reviews.stream()
-				.map(this::mapToResponse)
-				.toList();
+        return reviews.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    // Centralized Helper for External Auditing
+    private void sendAuditLog(Long userId, String action, Object dataBefore, Object dataAfter) {
+        try {
+            String before = dataBefore != null ? (dataBefore instanceof String ? (String) dataBefore : objectMapper.writeValueAsString(dataBefore)) : null;
+            String after = dataAfter != null ? (dataAfter instanceof String ? (String) dataAfter : objectMapper.writeValueAsString(dataAfter)) : null;
+
+            auditClient.createLog(new AuditLogRequest(
+                "REVIEW-SERVICE", 
+                action, 
+                userId, 
+                before, 
+                after
+            ));
+        } catch (Exception e) {
+            System.err.println("Audit logging failed in Review Service: " + e.getMessage());
+        }
     }
 }

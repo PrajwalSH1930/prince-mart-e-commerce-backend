@@ -1,5 +1,6 @@
 package com.pm.order.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pm.order.client.*;
 import com.pm.order.dto.*;
 import com.pm.order.entity.Order;
@@ -27,6 +28,8 @@ public class OrderService {
     private final UserClient userClient;
     private final ShippingClient shippingClient; 
     private final CouponClient couponClient;
+    private final AuditClient auditClient; // New client
+    private final ObjectMapper objectMapper; // For JSON snapshots
 
     public OrderService(OrderRepository orderRepository,
                         OrderStatusHistoryRepository historyRepository,
@@ -36,7 +39,9 @@ public class OrderService {
                         PaymentClient paymentClient,
                         UserClient userClient,
                         ShippingClient shippingClient,
-                        CouponClient couponClient) {
+                        CouponClient couponClient,
+                        AuditClient auditClient,
+                        ObjectMapper objectMapper) {
         this.orderRepository = orderRepository;
         this.historyRepository = historyRepository;
         this.cartClient = cartClient;
@@ -46,6 +51,8 @@ public class OrderService {
         this.userClient = userClient;
         this.shippingClient = shippingClient;
         this.couponClient = couponClient;
+        this.auditClient = auditClient;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -92,7 +99,6 @@ public class OrderService {
 
         order.setItems(orderItems);
 
-        // Calculate Totals and Apply Coupon
         BigDecimal cartTotal = orderItems.stream()
                 .map(OrderItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -115,7 +121,6 @@ public class OrderService {
 
         order.setTotalAmount(cartTotal.subtract(discountAmount));
 
-        // SAVE AND FLUSH: This makes the order visible to the Coupon Service's verify call
         Order savedOrder = orderRepository.save(order);
         orderRepository.flush(); 
 
@@ -147,7 +152,9 @@ public class OrderService {
             System.err.println("Non-critical error: Failed to clear cart - " + e.getMessage());
         }
 
-        // Payment Processing
+        // Audit the order creation
+        sendAuditLog(userId, "PLACE_ORDER", null, savedOrder);
+
         PaymentRequest paymentRequest = new PaymentRequest(
                 savedOrder.getOrderId(),
                 savedOrder.getTotalAmount(),
@@ -172,15 +179,22 @@ public class OrderService {
     }
 
     private void handlePaymentFailure(Order order, List<StockUpdateDTO> stockUpdates, String reason) {
+        String dataBefore = null;
+        try { dataBefore = objectMapper.writeValueAsString(order); } catch (Exception e) {}
+
         order.setPaymentStatus("FAILED");
         order.setOrderStatus("CANCELLED");
-        orderRepository.save(order);
-        saveHistory(order, "ORDER_CANCELLED_PAYMENT_FAILURE", "SYSTEM");
+        Order failedOrder = orderRepository.save(order);
+        saveHistory(failedOrder, "ORDER_CANCELLED_PAYMENT_FAILURE", "SYSTEM");
+
         try {
             inventoryClient.addStock(stockUpdates);
         } catch (Exception e) {
             System.err.println("CRITICAL: Failed to restore stock");
         }
+
+        // Audit the payment failure
+        sendAuditLog(order.getUserId(), "PAYMENT_FAILURE_CANCELLATION", dataBefore, failedOrder);
     }
 
     private void saveHistory(Order order, String status, String changedBy) {
@@ -195,10 +209,17 @@ public class OrderService {
     public Order updateStatus(Long orderId, String paymentStatus, String orderStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        
+        String dataBefore = null;
+        try { dataBefore = objectMapper.writeValueAsString(order); } catch (Exception e) {}
+
         order.setPaymentStatus(paymentStatus);
         order.setOrderStatus(orderStatus);
         Order updatedOrder = orderRepository.save(order);
         saveHistory(updatedOrder, orderStatus, "PAYMENT_SERVICE");
+
+        // Audit the status change
+        sendAuditLog(updatedOrder.getUserId(), "ORDER_STATUS_UPDATE", dataBefore, updatedOrder);
 
         if ("CONFIRMED".equalsIgnoreCase(orderStatus.trim())) {
             try {
@@ -225,5 +246,23 @@ public class OrderService {
     
     public boolean checkUserPurchasedProduct(Long userId, Long productId) {
         return orderRepository.existsByUserIdAndProductId(userId, productId);
+    }
+
+    // Helper for centralized auditing
+    private void sendAuditLog(Long userId, String action, Object dataBefore, Object dataAfter) {
+        try {
+            String before = dataBefore != null ? (dataBefore instanceof String ? (String) dataBefore : objectMapper.writeValueAsString(dataBefore)) : null;
+            String after = dataAfter != null ? objectMapper.writeValueAsString(dataAfter) : null;
+
+            auditClient.createLog(new AuditLogRequest(
+                "ORDER-SERVICE", 
+                action, 
+                userId, 
+                before, 
+                after
+            ));
+        } catch (Exception e) {
+            System.err.println("Audit logging failed in Order Service: " + e.getMessage());
+        }
     }
 }

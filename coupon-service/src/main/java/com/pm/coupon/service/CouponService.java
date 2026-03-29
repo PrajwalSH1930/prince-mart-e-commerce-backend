@@ -1,6 +1,9 @@
 package com.pm.coupon.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper; // For JSON conversion
+import com.pm.coupon.client.AuditClient; // New client
 import com.pm.coupon.client.OrderClient;
+import com.pm.coupon.dto.AuditLogRequest; // New DTO
 import com.pm.coupon.dto.CouponRequest;
 import com.pm.coupon.dto.CouponResponse;
 import com.pm.coupon.dto.OrderResponse;
@@ -21,18 +24,29 @@ public class CouponService {
     private final CouponRepository couponRepository;
     private final CouponUsageRepository usageRepository;
     private final OrderClient orderClient;
+    private final AuditClient auditClient;
+    private final ObjectMapper objectMapper;
 
     public CouponService(CouponRepository couponRepository, 
-                         CouponUsageRepository usageRepository,
-                         OrderClient orderClient) {
+                         CouponUsageRepository usageRepository, 
+                         OrderClient orderClient,
+                         AuditClient auditClient,
+                         ObjectMapper objectMapper) {
         this.couponRepository = couponRepository;
         this.usageRepository = usageRepository;
         this.orderClient = orderClient;
+        this.auditClient = auditClient;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
     public Coupon createCoupon(Coupon coupon) {
-        return couponRepository.save(coupon);
+        Coupon savedCoupon = couponRepository.save(coupon);
+        
+        // Audit log for creating a new coupon
+        sendAuditLog(null, "CREATE_COUPON", null, savedCoupon);
+        
+        return savedCoupon;
     }
 
     public CouponResponse validateCoupon(Long userId, CouponRequest request) {
@@ -68,7 +82,7 @@ public class CouponService {
 
     @Transactional
     public void recordUsage(Long userId, Long orderId, String code) {
-        // 1. Find Coupon first (Fastest check)
+        // 1. Find Coupon first
         Coupon coupon = couponRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Coupon not found: " + code));
 
@@ -81,18 +95,15 @@ public class CouponService {
         try {
             OrderResponse order = orderClient.getOrderById(orderId, userId);
             
-            // LOGIC CHECK: Does the order belong to this user?
             if (order == null || !order.getUserId().equals(userId)) {
                 throw new ResourceNotFoundException("Order verification failed: This order does not belong to you.");
             }
             
-            // OPTIONAL: Prevent usage on cancelled orders
             if ("CANCELLED".equalsIgnoreCase(order.getStatus())) {
                 throw new ResourceNotFoundException("Cannot apply coupon to a cancelled order.");
             }
 
         } catch (Exception e) {
-            // DEBUG: This will show the real Feign error (e.g., 404, 500, or Connection Refused)
             System.err.println("FEIGN ERROR: " + e.getMessage());
             throw new ResourceNotFoundException("Order Service returned an error or Order ID " + orderId + " was not found.");
         }
@@ -102,7 +113,11 @@ public class CouponService {
         usage.setCoupon(coupon);
         usage.setUserId(userId);
         usage.setOrderId(orderId);
-        usageRepository.save(usage);
+        
+        CouponUsage savedUsage = usageRepository.save(usage);
+        
+        // Audit the consumption of the coupon
+        sendAuditLog(userId, "COUPON_CONSUMED", "Code: " + code + " | Order: " + orderId, savedUsage);
     }
 
     private BigDecimal calculateDiscount(Coupon coupon, BigDecimal orderAmount) {
@@ -116,5 +131,23 @@ public class CouponService {
             }
         }
         return discount;
+    }
+
+    // Helper for centralized auditing
+    private void sendAuditLog(Long userId, String action, Object dataBefore, Object dataAfter) {
+        try {
+            String before = dataBefore != null ? (dataBefore instanceof String ? (String) dataBefore : objectMapper.writeValueAsString(dataBefore)) : null;
+            String after = dataAfter != null ? objectMapper.writeValueAsString(dataAfter) : null;
+
+            auditClient.createLog(new AuditLogRequest(
+                "COUPON-SERVICE", 
+                action, 
+                userId, 
+                before, 
+                after
+            ));
+        } catch (Exception e) {
+            System.err.println("Audit logging failed in Coupon Service: " + e.getMessage());
+        }
     }
 }

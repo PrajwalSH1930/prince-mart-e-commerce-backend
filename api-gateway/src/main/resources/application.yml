@@ -85,6 +85,14 @@ spring:
             - Path=/coupons/**
           filters:
             - AuthenticationFilter
+
+        - id: audit-service
+          uri: lb://AUDIT-SERVICE
+          predicates:
+            - Path=/audit/**
+          filters:
+            - AuthenticationFilter					
+
 eureka:
   instance:
     prefer-ip-address: true
