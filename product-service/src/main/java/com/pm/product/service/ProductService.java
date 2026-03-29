@@ -9,6 +9,7 @@ import com.pm.product.entity.ProductVariant;
 import com.pm.product.exception.ResourceNotFoundException;
 import com.pm.product.repository.CategoryRepository;
 import com.pm.product.repository.ProductRepository;
+import com.pm.product.repository.ProductVariantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +21,16 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final InventoryClient inventoryClient; // Added Feign Client
+    private final ProductVariantRepository productVariantRepository; // Added this
+    private final InventoryClient inventoryClient;
 
     public ProductService(ProductRepository productRepository, 
                           CategoryRepository categoryRepository, 
+                          ProductVariantRepository productVariantRepository,
                           InventoryClient inventoryClient) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.productVariantRepository = productVariantRepository;
         this.inventoryClient = inventoryClient;
     }
 
@@ -42,7 +46,6 @@ public class ProductService {
         product.setMainImageUrl(dto.getMainImageUrl());
         product.setCategory(category);
         
-        // Auto-generate slug: "Nike Air Max" -> "nike-air-max-123456789"
         product.setSlug(dto.getName().toLowerCase().replaceAll(" ", "-") + "-" + System.currentTimeMillis());
 
         List<ProductVariant> variants = new ArrayList<>();
@@ -60,19 +63,20 @@ public class ProductService {
 
         product.setVariants(variants);
         
-        // Save the product and variants first to get their IDs
         Product savedProduct = productRepository.save(product);
 
-        // AUTOMATION: Call Inventory Service for each variant
-        // Assuming '1L' is the default Warehouse ID you created earlier
         for (ProductVariant savedVariant : savedProduct.getVariants()) {
-            inventoryClient.initializeStock(
-                savedProduct.getProductId(),
-                savedVariant.getVariantId(),
-                1L, 
-                savedVariant.getStockQuantity(), // Sending initial stock quantity from DTO
-                "INITIAL_PRODUCT_UPLOAD"
-            );
+            try {
+                inventoryClient.initializeStock(
+                    savedProduct.getProductId(),
+                    savedVariant.getVariantId(),
+                    1L, 
+                    savedVariant.getStockQuantity(),
+                    "INITIAL_PRODUCT_UPLOAD"
+                );
+            } catch (Exception e) {
+                System.err.println("Non-critical: Inventory sync failed for variant " + savedVariant.getVariantId());
+            }
         }
 
         return savedProduct;
@@ -85,5 +89,16 @@ public class ProductService {
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+    
+    public Product getProductById(Long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+    }
+    
+    public ProductVariant getVariantById(Long variantId) {
+        // FIXED: Using the ProductVariantRepository properly
+        return productVariantRepository.findById(variantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product Variant not found with ID: " + variantId));
     }
 }

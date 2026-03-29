@@ -1,6 +1,5 @@
-package com.pm.shipment.client;
+package com.pm.shipment.dto;
 
-import com.pm.shipment.dto.NotificationRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

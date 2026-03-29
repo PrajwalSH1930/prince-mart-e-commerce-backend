@@ -8,4 +8,5 @@ import com.pm.product.entity.Product;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 	Optional<Product> findBySlug(String slug);
+
 }
