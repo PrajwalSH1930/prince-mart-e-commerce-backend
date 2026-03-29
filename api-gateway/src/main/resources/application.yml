@@ -78,6 +78,13 @@ spring:
             - Path=/wishlist/**
           filters:
             - AuthenticationFilter
+
+        - id: coupon-service
+          uri: lb://COUPON-SERVICE
+          predicates:
+            - Path=/coupons/**
+          filters:
+            - AuthenticationFilter
 eureka:
   instance:
     prefer-ip-address: true
