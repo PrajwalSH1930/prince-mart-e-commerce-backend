@@ -1,6 +1,9 @@
 package com.pm.shipment.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pm.shipment.client.AuditClient; // New client
 import com.pm.shipment.client.NotificationClient;
+import com.pm.shipment.dto.AuditLogRequest; // New DTO
 import com.pm.shipment.dto.NotificationRequest;
 import com.pm.shipment.entity.Shipment;
 import com.pm.shipment.exception.ResourceNotFoundException;
@@ -14,10 +17,17 @@ public class ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
     private final NotificationClient notificationClient;
+    private final AuditClient auditClient;
+    private final ObjectMapper objectMapper;
 
-    public ShipmentService(ShipmentRepository shipmentRepository, NotificationClient notificationClient) {
+    public ShipmentService(ShipmentRepository shipmentRepository, 
+                           NotificationClient notificationClient,
+                           AuditClient auditClient,
+                           ObjectMapper objectMapper) {
         this.shipmentRepository = shipmentRepository;
         this.notificationClient = notificationClient;
+        this.auditClient = auditClient;
+        this.objectMapper = objectMapper;
     }
 
     public Shipment getStatusByShipmentId(Long shipmentId) {
@@ -38,7 +48,11 @@ public class ShipmentService {
                     shipment.setTrackingNumber("PM-TRACK-" + System.currentTimeMillis());
                     
                     Shipment saved = shipmentRepository.save(shipment);
-                    // Initial notification: "We are packing your order"
+                    
+                    // Audit the creation of the shipment record
+                    sendAuditLog(null, "SHIPMENT_CREATED", "Order ID: " + orderId, saved);
+
+                    // Initial notification
                     sendShippingEmail(saved);
                     return saved;
                 });
@@ -53,6 +67,12 @@ public class ShipmentService {
         Shipment shipment = shipmentRepository.findById(shipmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment not found"));
         
+        // Capture state before status change
+        String dataBefore = null;
+        try {
+            dataBefore = objectMapper.writeValueAsString(shipment);
+        } catch (Exception e) {}
+
         shipment.setStatus(status.toUpperCase());
         
         if ("DELIVERED".equalsIgnoreCase(status)) {
@@ -61,7 +81,10 @@ public class ShipmentService {
         
         Shipment updatedShipment = shipmentRepository.save(shipment);
 
-        // TRIGGER EMAIL: "Your order is SHIPPED / OUT_FOR_DELIVERY / DELIVERED"
+        // Audit the status transition
+        sendAuditLog(null, "SHIPMENT_STATUS_UPDATE", dataBefore, updatedShipment);
+
+        // Trigger Email Notification
         sendShippingEmail(updatedShipment);
         
         return updatedShipment;
@@ -74,17 +97,36 @@ public class ShipmentService {
             request.setCustomerName(shipment.getCustomerName());
             request.setOrderId(shipment.getOrderId().toString());
             
-            // Dynamic Subject based on status
             String subject = "Prince Mart Update: Order #" + shipment.getOrderId() + " is " + shipment.getStatus();
             request.setSubject(subject);
-            
-            // We pass the status into the 'amount' field so Thymeleaf can use it
             request.setAmount(shipment.getStatus()); 
 
             notificationClient.sendOrderConfirmation(request);
+            
+            // Log that a shipping notification was triggered
+            sendAuditLog(null, "SHIPPING_NOTIFICATION_TRIGGERED", "Status: " + shipment.getStatus(), "Recipient: " + shipment.getCustomerEmail());
+            
             System.out.println("DEBUG: Shipping Email Triggered for Status: " + shipment.getStatus());
         } catch (Exception e) {
             System.err.println("Non-critical: Failed to send shipping email: " + e.getMessage());
+        }
+    }
+
+    // Centralized Helper for External Auditing
+    private void sendAuditLog(Long userId, String action, Object dataBefore, Object dataAfter) {
+        try {
+            String before = dataBefore != null ? (dataBefore instanceof String ? (String) dataBefore : objectMapper.writeValueAsString(dataBefore)) : null;
+            String after = dataAfter != null ? (dataAfter instanceof String ? (String) dataAfter : objectMapper.writeValueAsString(dataAfter)) : null;
+
+            auditClient.createLog(new AuditLogRequest(
+                "SHIPMENT-SERVICE", 
+                action, 
+                userId, 
+                before, 
+                after
+            ));
+        } catch (Exception e) {
+            System.err.println("Audit logging failed in Shipment Service: " + e.getMessage());
         }
     }
 }
