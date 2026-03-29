@@ -26,6 +26,7 @@ public class OrderService {
     private final PaymentClient paymentClient;
     private final UserClient userClient;
     private final ShippingClient shippingClient; 
+    private final CouponClient couponClient;
 
     public OrderService(OrderRepository orderRepository,
                         OrderStatusHistoryRepository historyRepository,
@@ -34,7 +35,8 @@ public class OrderService {
                         AddressClient addressClient,
                         PaymentClient paymentClient,
                         UserClient userClient,
-                        ShippingClient shippingClient) {
+                        ShippingClient shippingClient,
+                        CouponClient couponClient) {
         this.orderRepository = orderRepository;
         this.historyRepository = historyRepository;
         this.cartClient = cartClient;
@@ -43,6 +45,7 @@ public class OrderService {
         this.paymentClient = paymentClient;
         this.userClient = userClient;
         this.shippingClient = shippingClient;
+        this.couponClient = couponClient;
     }
 
     @Transactional
@@ -53,8 +56,8 @@ public class OrderService {
         }
 
         UserResponse user = userClient.getUserById(userId);
-
         AddressResponse address = addressClient.getAddressById(request.getShippingAddressId());
+        
         String snapshot = String.format("%s\n%s, %s\n%s, %s, %s - %s\nPhone: %s",
                 address.getFullName(),
                 address.getAddressLine1(),
@@ -89,14 +92,45 @@ public class OrderService {
 
         order.setItems(orderItems);
 
-        BigDecimal total = orderItems.stream()
+        // Calculate Totals and Apply Coupon
+        BigDecimal cartTotal = orderItems.stream()
                 .map(OrderItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        order.setTotalAmount(total);
+        
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        String appliedCoupon = request.getCouponCode();
 
+        if (appliedCoupon != null && !appliedCoupon.isEmpty()) {
+            try {
+                CouponResponse couponRes = couponClient.validateCoupon(userId, 
+                    new CouponRequest(appliedCoupon, cartTotal));
+                
+                if (couponRes.isValid()) {
+                    discountAmount = couponRes.getDiscountAmount();
+                }
+            } catch (Exception e) {
+                System.err.println("Coupon validation failed: " + e.getMessage());
+            }
+        }
+
+        order.setTotalAmount(cartTotal.subtract(discountAmount));
+
+        // SAVE AND FLUSH: This makes the order visible to the Coupon Service's verify call
         Order savedOrder = orderRepository.save(order);
+        orderRepository.flush(); 
+
         saveHistory(savedOrder, "PENDING", "SYSTEM");
 
+        // Record Coupon Usage
+        if (discountAmount.compareTo(BigDecimal.ZERO) > 0) {
+            try {
+                couponClient.useCoupon(userId, savedOrder.getOrderId(), appliedCoupon);
+            } catch (Exception e) {
+                System.err.println("Failed to record coupon usage: " + e.getMessage());
+            }
+        }
+
+        // Inventory Management
         List<StockUpdateDTO> stockUpdates = savedOrder.getItems().stream()
                 .map(item -> new StockUpdateDTO(item.getVariantId(), item.getQuantity()))
                 .collect(Collectors.toList());
@@ -113,6 +147,7 @@ public class OrderService {
             System.err.println("Non-critical error: Failed to clear cart - " + e.getMessage());
         }
 
+        // Payment Processing
         PaymentRequest paymentRequest = new PaymentRequest(
                 savedOrder.getOrderId(),
                 savedOrder.getTotalAmount(),
@@ -127,26 +162,24 @@ public class OrderService {
                 savedOrder.setTransactionId(paymentResponse.getTransactionId());
                 orderRepository.save(savedOrder);
             } else {
-                handlePaymentFailure(savedOrder, stockUpdates, "Payment Rejected by Gateway");
+                handlePaymentFailure(savedOrder, stockUpdates, "Payment Rejected");
             }
         } catch (Exception e) {
-            handlePaymentFailure(savedOrder, stockUpdates, "Payment Service Connection Error: " + e.getMessage());
+            handlePaymentFailure(savedOrder, stockUpdates, "Payment Connection Error: " + e.getMessage());
         }
 
         return savedOrder;
     }
 
     private void handlePaymentFailure(Order order, List<StockUpdateDTO> stockUpdates, String reason) {
-        System.err.println("Payment failed for order " + order.getOrderId() + ": " + reason);
         order.setPaymentStatus("FAILED");
         order.setOrderStatus("CANCELLED");
         orderRepository.save(order);
         saveHistory(order, "ORDER_CANCELLED_PAYMENT_FAILURE", "SYSTEM");
-
         try {
             inventoryClient.addStock(stockUpdates);
         } catch (Exception e) {
-            System.err.println("CRITICAL: Failed to restore stock - " + e.getMessage());
+            System.err.println("CRITICAL: Failed to restore stock");
         }
     }
 
@@ -160,35 +193,22 @@ public class OrderService {
 
     @Transactional
     public Order updateStatus(Long orderId, String paymentStatus, String orderStatus) {
-        System.out.println("DEBUG: updateStatus called for Order: " + orderId);
-        
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-        
         order.setPaymentStatus(paymentStatus);
         order.setOrderStatus(orderStatus);
         Order updatedOrder = orderRepository.save(order);
-        
         saveHistory(updatedOrder, orderStatus, "PAYMENT_SERVICE");
 
         if ("CONFIRMED".equalsIgnoreCase(orderStatus.trim())) {
             try {
-                System.out.println("DEBUG: Triggering Shipping with Customer Info...");
-                // Pass Name and Email along with Order ID
-                shippingClient.initiateShipment(
-                    orderId, 
-                    updatedOrder.getCustomerName(), 
-                    updatedOrder.getUserEmail()
-                );
-                System.out.println("DEBUG: Shipping Service call successful!");
+                shippingClient.initiateShipment(orderId, updatedOrder.getCustomerName(), updatedOrder.getUserEmail());
             } catch (Exception e) {
-                System.err.println("DEBUG: Shipping Trigger Failed! Error: " + e.getMessage());
+                System.err.println("Shipping Trigger Failed");
             }
         }
-
         return updatedOrder; 
     }
-    
 
     public List<Order> getOrderHistory(Long userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
@@ -203,10 +223,7 @@ public class OrderService {
         return order;
     }
     
- // Inside OrderService.java
-
     public boolean checkUserPurchasedProduct(Long userId, Long productId) {
-        System.out.println("DEBUG: Checking purchase for User: " + userId + " and Product: " + productId);
         return orderRepository.existsByUserIdAndProductId(userId, productId);
     }
 }

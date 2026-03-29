@@ -4,6 +4,16 @@ public class OrderRequest {
     private Long shippingAddressId;
     private Long billingAddressId;
     private String currency; // e.g., "INR"
+    private String couponCode; // Optional coupon code
+    
+    public String getCouponCode() {
+    			return couponCode;
+    }
+    public void setCouponCode(String couponCode) {
+				this.couponCode = couponCode;
+	}
+    
+    
 	public Long getShippingAddressId() {
 		return shippingAddressId;
 	}
@@ -26,8 +36,9 @@ public class OrderRequest {
 		super();
 		// TODO Auto-generated constructor stub
 	}
-	public OrderRequest(Long shippingAddressId, Long billingAddressId, String currency) {
+	public OrderRequest(Long shippingAddressId, Long billingAddressId, String currency, String couponCode) {
 		super();
+		this.couponCode = couponCode;
 		this.shippingAddressId = shippingAddressId;
 		this.billingAddressId = billingAddressId;
 		this.currency = currency;
