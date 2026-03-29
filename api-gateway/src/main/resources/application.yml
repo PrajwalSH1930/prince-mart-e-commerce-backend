@@ -8,13 +8,16 @@ spring:
   cloud:
     gateway:
       routes:
-
         - id: identity-service
           uri: lb://IDENTITY-SERVICE
           predicates:
             - Path=/auth/**,/users/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: identityServiceCB
+                fallbackUri: forward:/fallback/identity-fallback
 
         - id: product-service
           uri: lb://PRODUCT-SERVICE
@@ -22,6 +25,10 @@ spring:
             - Path=/products/**,/categories/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: productServiceCB
+                fallbackUri: forward:/fallback/product-fallback
 
         - id: inventory-service
           uri: lb://INVENTORY-SERVICE
@@ -29,6 +36,10 @@ spring:
             - Path=/inventory/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: inventoryServiceCB
+                fallbackUri: forward:/fallback/inventory-fallback
 
         - id: cart-service
           uri: lb://CART-SERVICE
@@ -36,6 +47,10 @@ spring:
             - Path=/cart/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: cartServiceCB
+                fallbackUri: forward:/fallback/cart-fallback
 
         - id: order-service
           uri: lb://ORDER-SERVICE
@@ -43,13 +58,21 @@ spring:
             - Path=/orders/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCB
+                fallbackUri: forward:/fallback/order-fallback
 
         - id: payment-service
           uri: lb://PAYMENT-SERVICE
           predicates:
             - Path=/payments/**
           filters:
-            - AuthenticationFilter		
+            - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: paymentServiceCB
+                fallbackUri: forward:/fallback/payment-fallback
 
         - id: notification-service
           uri: lb://NOTIFICATION-SERVICE
@@ -57,6 +80,10 @@ spring:
             - Path=/notifications/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: notificationServiceCB
+                fallbackUri: forward:/fallback/notification-fallback
 
         - id: shipping-service
           uri: lb://SHIPPING-SERVICE
@@ -64,6 +91,10 @@ spring:
             - Path=/shipments/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: shippingServiceCB
+                fallbackUri: forward:/fallback/shipping-fallback
 
         - id: review-service
           uri: lb://REVIEW-SERVICE
@@ -71,6 +102,10 @@ spring:
             - Path=/reviews/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: reviewServiceCB
+                fallbackUri: forward:/fallback/review-fallback
 
         - id: wishlist-service
           uri: lb://WISHLIST-SERVICE
@@ -78,6 +113,10 @@ spring:
             - Path=/wishlist/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: wishlistServiceCB
+                fallbackUri: forward:/fallback/wishlist-fallback
 
         - id: coupon-service
           uri: lb://COUPON-SERVICE
@@ -85,13 +124,34 @@ spring:
             - Path=/coupons/**
           filters:
             - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: couponServiceCB
+                fallbackUri: forward:/fallback/coupon-fallback
 
         - id: audit-service
           uri: lb://AUDIT-SERVICE
           predicates:
             - Path=/audit/**
           filters:
-            - AuthenticationFilter					
+            - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: auditServiceCB
+                fallbackUri: forward:/fallback/audit-fallback
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 5s
 
 eureka:
   instance:

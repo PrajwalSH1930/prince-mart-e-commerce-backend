@@ -6,7 +6,6 @@ import com.pm.cart.service.CartService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/cart")
@@ -32,8 +31,7 @@ public class CartController {
                 userId, 
                 request.getProductId(), 
                 request.getVariantId(), 
-                request.getQuantity(), 
-                request.getPrice()
+                request.getQuantity()
         ));
     }
 

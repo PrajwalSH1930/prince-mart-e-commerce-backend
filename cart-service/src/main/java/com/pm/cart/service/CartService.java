@@ -1,8 +1,10 @@
 package com.pm.cart.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper; // For JSON conversion
-import com.pm.cart.client.AuditClient; // Your new client
-import com.pm.cart.dto.AuditLogRequest; // Your new DTO
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pm.cart.client.AuditClient;
+import com.pm.cart.client.ProductClient; // NEW: Added ProductClient
+import com.pm.cart.dto.AuditLogRequest;
+import com.pm.cart.dto.ProductVariantResponse; // NEW: Added DTO for variant info
 import com.pm.cart.entity.Cart;
 import com.pm.cart.entity.CartItem;
 import com.pm.cart.exception.ResourceNotFoundException;
@@ -19,19 +21,31 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final AuditClient auditClient;
+    private final ProductClient productClient; // NEW
     private final ObjectMapper objectMapper;
 
     public CartService(CartRepository cartRepository, 
                        AuditClient auditClient, 
+                       ProductClient productClient, // NEW
                        ObjectMapper objectMapper) {
         this.cartRepository = cartRepository;
         this.auditClient = auditClient;
+        this.productClient = productClient; // NEW
         this.objectMapper = objectMapper;
     }
 
     @Transactional
-    public Cart addToCart(Long userId, Long productId, Long variantId, Integer quantity, BigDecimal price) {
-        // 1. Get or Create active cart
+    public Cart addToCart(Long userId, Long productId, Long variantId, Integer quantity) {
+        // 1. SECURITY FIX: Fetch the REAL price from Product Service
+        BigDecimal realPrice;
+        try {
+            ProductVariantResponse variant = productClient.getVariantById(variantId);
+            realPrice = variant.getPrice();
+        } catch (Exception e) {
+            throw new ResourceNotFoundException("Price verification failed for variant " + variantId + ". Service may be down.");
+        }
+
+        // 2. Get or Create active cart
         Cart cart = cartRepository.findByUserIdAndStatus(userId, "active")
                 .orElseGet(() -> {
                     Cart newCart = new Cart();
@@ -49,7 +63,7 @@ public class CartService {
             System.err.println("JSON conversion failed: " + e.getMessage());
         }
 
-        // 2. Check if item already exists in cart
+        // 3. Check if item already exists in cart
         Optional<CartItem> existingItem = cart.getItems().stream()
                 .filter(item -> item.getVariantId().equals(variantId))
                 .findFirst();
@@ -57,21 +71,21 @@ public class CartService {
         if (existingItem.isPresent()) {
             CartItem item = existingItem.get();
             item.setQuantity(item.getQuantity() + quantity);
-            item.setPriceSnapshot(price); 
+            item.setPriceSnapshot(realPrice); // Use official price
         } else {
             CartItem newItem = new CartItem();
             newItem.setCart(cart);
             newItem.setProductId(productId);
             newItem.setVariantId(variantId);
             newItem.setQuantity(quantity);
-            newItem.setPriceSnapshot(price);
+            newItem.setPriceSnapshot(realPrice); // Use official price
             cart.getItems().add(newItem);
         }
 
         Cart savedCart = cartRepository.save(cart);
 
         // Audit the change
-        sendAuditLog(userId, "ADD_TO_CART", dataBefore, savedCart);
+        sendAuditLog(userId, "ADD_TO_CART_SECURE", dataBefore, savedCart);
 
         return savedCart;
     }
@@ -100,6 +114,14 @@ public class CartService {
             cart.getItems().remove(item);
         } else {
             item.setQuantity(quantity);
+            
+            // OPTIONAL: Refresh price snapshot on quantity update to ensure accuracy
+            try {
+                ProductVariantResponse variant = productClient.getVariantById(variantId);
+                item.setPriceSnapshot(variant.getPrice());
+            } catch (Exception e) {
+                System.err.println("Price refresh failed during quantity update: " + e.getMessage());
+            }
         }
 
         Cart savedCart = cartRepository.save(cart);
@@ -143,7 +165,6 @@ public class CartService {
         sendAuditLog(userId, "CLEAR_CART_COMPLETED", dataBefore, savedCart);
     }
 
-    // Helper method to keep main code clean
     private void sendAuditLog(Long userId, String action, String dataBefore, Cart savedCart) {
         try {
             String dataAfter = objectMapper.writeValueAsString(savedCart);
