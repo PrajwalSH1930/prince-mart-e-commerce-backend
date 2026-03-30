@@ -2,7 +2,9 @@ package com.pm.auth.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pm.auth.client.AuditClient;
+import com.pm.auth.client.NotificationClient;
 import com.pm.auth.dto.AuditLogRequest;
+import com.pm.auth.dto.NotificationRequest;
 import com.pm.auth.dto.UserDTO;
 import com.pm.auth.entity.Addresses;
 import com.pm.auth.entity.Role;
@@ -28,6 +30,7 @@ public class AuthService {
     private final AddressRepository addressRepository;
     private final AuditClient auditClient;
     private final ObjectMapper objectMapper;
+    private final NotificationClient notificationClient;
 
     public AuthService(UserRepository userRepository, 
                        PasswordEncoder passwordEncoder, 
@@ -35,7 +38,8 @@ public class AuthService {
                        AuthenticationManager authenticationManager, 
                        AddressRepository addressRepository,
                        AuditClient auditClient,
-                       ObjectMapper objectMapper) {
+                       ObjectMapper objectMapper, 
+                       NotificationClient notificationClient) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -43,6 +47,7 @@ public class AuthService {
         this.addressRepository = addressRepository;
         this.auditClient = auditClient;
         this.objectMapper = objectMapper;
+        this.notificationClient = notificationClient;
     }
 
     public String generateToken(String email, String password) {
@@ -82,13 +87,25 @@ public class AuthService {
         
         User savedUser = userRepository.save(user);
 
-        // Security: Create a copy for logging that doesn't include the password hash
+        // 1. Audit Log (Existing)
         User logUser = new User();
         logUser.setUserId(savedUser.getUserId());
         logUser.setEmail(savedUser.getEmail());
         logUser.setRole(savedUser.getRole());
-
         sendAuditLog(savedUser.getUserId(), "USER_REGISTRATION", null, logUser);
+
+        // 2. Trigger Welcome Email
+        try {
+            NotificationRequest welcomeMail = new NotificationRequest(
+                savedUser.getEmail(), 
+                dto.getEmail(), // or savedUser.getEmail() if firstName isn't in User entity yet
+                "WELCOME"
+            );
+            notificationClient.sendNotification(welcomeMail);
+        } catch (Exception e) {
+            System.err.println("Notification trigger failed: " + e.getMessage());
+            // We don't throw exception here so the registration itself doesn't fail
+        }
 
         return savedUser;
     }
