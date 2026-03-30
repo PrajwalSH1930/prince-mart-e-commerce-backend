@@ -151,7 +151,7 @@ resilience4j:
   timelimiter:
     configs:
       default:
-        timeoutDuration: 5s
+        timeoutDuration: 10s
 
 eureka:
   instance:

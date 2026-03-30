@@ -2,6 +2,7 @@ package com.pm.notification.controller;
 
 import com.pm.notification.dto.NotificationRequest;
 import com.pm.notification.entity.Notification;
+import com.pm.notification.service.EmailService;
 import com.pm.notification.service.NotificationService;
 
 import java.util.List;
@@ -14,9 +15,12 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    
+    private final EmailService emailService;
 
-    public NotificationController(NotificationService notificationService) {
+    public NotificationController(NotificationService notificationService, EmailService emailService) {
         this.notificationService = notificationService;
+        this.emailService = emailService;
     }
 
     @GetMapping("/welcome")
@@ -42,6 +46,17 @@ public class NotificationController {
         notificationService.sendOrderConfirmation(request);
         return ResponseEntity.ok("Notification processed successfully");
     }
+    
+    @PostMapping("/welcome-email")
+    public ResponseEntity<String> sendWelcomeEmail(@RequestBody NotificationRequest request) {
+		try {
+			emailService.sendWelcomeEmail(request.getRecipient(), request.getCustomerName());
+			return ResponseEntity.ok("Welcome email sent successfully");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body("Failed to send welcome email: " + e.getMessage());
+		}
+	}
     
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Notification>> getUserNotifications(@PathVariable Long userId) {
