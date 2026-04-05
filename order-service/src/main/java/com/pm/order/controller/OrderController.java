@@ -61,4 +61,10 @@ public class OrderController {
         boolean purchased = orderService.checkUserPurchasedProduct(userId, productId);
         return ResponseEntity.ok(purchased);
     }
+    
+    @GetMapping("/my-orders")
+    public ResponseEntity<List<Order>> getMyOrders(@RequestHeader("X-User-Id") Long userId) {
+		List<Order> orders = orderService.getMyOrders(userId);
+		return ResponseEntity.ok(orders);
+	}
 }

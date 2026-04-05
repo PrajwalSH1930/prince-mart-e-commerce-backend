@@ -17,4 +17,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "AND i.productId = :productId " +
            "AND o.orderStatus = 'CONFIRMED'")
     boolean existsByUserIdAndProductId(@Param("userId") Long userId, @Param("productId") Long productId);
+    
+    List<Order> findByUserId(Long userId);
 }

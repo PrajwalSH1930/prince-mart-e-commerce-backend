@@ -265,4 +265,8 @@ public class OrderService {
             System.err.println("Audit logging failed in Order Service: " + e.getMessage());
         }
     }
+    
+    public List<Order> getMyOrders(Long userId) {
+		return orderRepository.findByUserId(userId);
+	}
 }

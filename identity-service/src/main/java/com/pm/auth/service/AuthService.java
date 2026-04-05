@@ -9,8 +9,10 @@ import com.pm.auth.dto.UserDTO;
 import com.pm.auth.entity.Addresses;
 import com.pm.auth.entity.Role;
 import com.pm.auth.entity.User;
+import com.pm.auth.entity.UserProfile;
 import com.pm.auth.exception.ResourceNotFoundException;
 import com.pm.auth.repository.AddressRepository;
+import com.pm.auth.repository.UserProfileRepository;
 import com.pm.auth.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +26,7 @@ import java.util.List;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -39,8 +42,10 @@ public class AuthService {
                        AddressRepository addressRepository,
                        AuditClient auditClient,
                        ObjectMapper objectMapper, 
-                       NotificationClient notificationClient) {
+                       NotificationClient notificationClient, 
+                       UserProfileRepository userProfileRepository) {
         this.userRepository = userRepository;
+        this.userProfileRepository = userProfileRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -60,7 +65,6 @@ public class AuthService {
                 User user = userRepository.findByEmail(email)
                         .orElseThrow(() -> new ResourceNotFoundException("User not found"));
                 
-                // Audit successful login
                 sendAuditLog(user.getUserId(), "USER_LOGIN", "Email: " + email, "SUCCESS");
                 
                 return jwtService.generateToken(email, user.getUserId());
@@ -68,7 +72,6 @@ public class AuthService {
                 throw new RuntimeException("Invalid Access");
             }
         } catch (Exception e) {
-            // Audit failed login attempt
             sendAuditLog(null, "LOGIN_FAILURE", "Attempted Email: " + email, "FAILED: " + e.getMessage());
             throw e;
         }
@@ -87,31 +90,28 @@ public class AuthService {
         
         User savedUser = userRepository.save(user);
 
-        // 1. Audit Log (Existing)
         User logUser = new User();
         logUser.setUserId(savedUser.getUserId());
         logUser.setEmail(savedUser.getEmail());
         logUser.setRole(savedUser.getRole());
         sendAuditLog(savedUser.getUserId(), "USER_REGISTRATION", null, logUser);
 
-        // 2. Trigger Welcome Email
         try {
             NotificationRequest welcomeMail = new NotificationRequest(
                 savedUser.getEmail(), 
-                dto.getEmail(), // or savedUser.getEmail() if firstName isn't in User entity yet
+                dto.getEmail(), 
                 "WELCOME"
             );
             notificationClient.sendNotification(welcomeMail);
         } catch (Exception e) {
             System.err.println("Notification trigger failed: " + e.getMessage());
-            // We don't throw exception here so the registration itself doesn't fail
         }
 
         return savedUser;
     }
 
     public void validateToken(String token) {
-        jwtService.validateToken(token);
+        jwtService.validateToken(token); 
     }
     
     public String extractUserId(String token) {
@@ -128,7 +128,6 @@ public class AuthService {
         address.setUser(user);
         Addresses savedAddress = addressRepository.save(address);
 
-        // Audit adding a new shipping address
         sendAuditLog(userId, "ADD_ADDRESS", null, savedAddress);
 
         return savedAddress;
@@ -143,7 +142,36 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
     }
 
-    // Centralized Helper Method
+    // --- NEW: User Profile Logic ---
+    public UserProfile saveOrUpdateProfile(Long userId, UserProfile profileData) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        UserProfile profile = userProfileRepository.findByUser(user)
+                .map(existing -> {
+                    existing.setFirstName(profileData.getFirstName());
+                    existing.setLastName(profileData.getLastName());
+                    existing.setGender(profileData.getGender());
+                    existing.setDateOfBirth(profileData.getDateOfBirth());
+                    existing.setProfileImage(profileData.getProfileImage());
+                    return existing;
+                }).orElseGet(() -> {
+                    profileData.setUser(user);
+                    return profileData;
+                });
+
+        UserProfile savedProfile = userProfileRepository.save(profile);
+        sendAuditLog(userId, "UPDATE_PROFILE", null, savedProfile);
+        return savedProfile;
+    }
+
+    public UserProfile getProfileByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return userProfileRepository.findByUser(user)
+                .orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
+    }
+
     private void sendAuditLog(Long userId, String action, Object dataBefore, Object dataAfter) {
         try {
             String before = dataBefore != null ? (dataBefore instanceof String ? (String) dataBefore : objectMapper.writeValueAsString(dataBefore)) : null;
