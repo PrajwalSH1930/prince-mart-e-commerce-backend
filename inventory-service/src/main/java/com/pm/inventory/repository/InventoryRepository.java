@@ -11,4 +11,6 @@ import com.pm.inventory.entity.Inventory;
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 	Optional<Inventory> findByVariantIdAndWarehouse_WarehouseId(Long variantId, Long warehouseId);
 	Optional<Inventory> findByVariantId(Long variantId);
+	
+	Optional<Inventory> findByProductIdAndVariantId(Long productId, Long variantId);
 }

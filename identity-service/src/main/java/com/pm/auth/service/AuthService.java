@@ -3,6 +3,7 @@ package com.pm.auth.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pm.auth.client.AuditClient;
 import com.pm.auth.client.NotificationClient;
+import com.pm.auth.dto.AddressDTO;
 import com.pm.auth.dto.AuditLogRequest;
 import com.pm.auth.dto.NotificationRequest;
 import com.pm.auth.dto.UserDTO;
@@ -14,6 +15,9 @@ import com.pm.auth.exception.ResourceNotFoundException;
 import com.pm.auth.repository.AddressRepository;
 import com.pm.auth.repository.UserProfileRepository;
 import com.pm.auth.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -188,4 +192,48 @@ public class AuthService {
             System.err.println("Audit logging failed in Auth Service: " + e.getMessage());
         }
     }
+    
+    public void deleteAddress(Long userId, Long addressId) {
+		Addresses address = addressRepository.findById(addressId)
+				.orElseThrow(() -> new ResourceNotFoundException("Address not found"));
+		
+		if (!address.getUser().getUserId().equals(userId)) {
+			throw new ResourceNotFoundException("Unauthorized to delete this address");
+		}
+
+		addressRepository.delete(address);
+		sendAuditLog(userId, "DELETE_ADDRESS", null, "Deleted Address ID: " + addressId);
+	}
+
+    @Transactional
+    public Addresses updateAddress(Long addressId, Long userId, AddressDTO dto) {
+        // 1. Fetch existing address
+        Addresses existing = addressRepository.findById(addressId)
+            .orElseThrow(() -> new RuntimeException("Address Registry entry not found"));
+
+        // 2. Security: Ensure the address belongs to the user
+        if (!existing.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("Access Denied: Registry mismatch");
+        }
+
+        // 3. If this is being set as default, unset others first
+        if (dto.isDefault()) {
+            addressRepository.unsetOtherDefaults(userId, addressId);
+        }
+
+        // 4. Update fields
+        existing.setFullName(dto.getFullName());
+        existing.setPhone(dto.getPhone());
+        existing.setAddressLine1(dto.getAddressLine1());
+        existing.setAddressLine2(dto.getAddressLine2());
+        existing.setCity(dto.getCity());
+        existing.setState(dto.getState());
+        existing.setPostalCode(dto.getPostalCode());
+        existing.setCountry(dto.getCountry());
+        existing.setDefault(dto.isDefault());
+
+        return addressRepository.save(existing);
+    }
+    
+    	
 }

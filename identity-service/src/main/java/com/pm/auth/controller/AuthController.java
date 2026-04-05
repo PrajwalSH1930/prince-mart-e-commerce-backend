@@ -4,6 +4,8 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.pm.auth.dto.AddressDTO;
 import com.pm.auth.dto.AuthRequest;
 import com.pm.auth.dto.UserDTO;
 import com.pm.auth.dto.UserResponse; 
@@ -94,5 +96,23 @@ public class AuthController {
     @GetMapping("/addresses/id/{id}")
     public ResponseEntity<Addresses> getAddressById(@PathVariable Long id) {
         return ResponseEntity.ok(authService.getAddressById(id));
+    }
+    
+    @DeleteMapping("/addresses/id/{addressId}")
+    public ResponseEntity<Void> deleteAddressById(@PathVariable Long addressId, @RequestHeader("X-User-Id") Long userId) {
+		authService.deleteAddress(userId, addressId);
+		return ResponseEntity.noContent().build();
+	}
+    
+ // Inside AddressController.java
+    @PutMapping("/addresses/{addressId}")
+    public ResponseEntity<Addresses> updateAddress(
+        @PathVariable Long addressId, 
+        @RequestBody AddressDTO addressDetails,
+        @RequestHeader("X-User-Id") Long userId) {
+        
+        // Logic: Find address, verify it belongs to this userId, then update fields
+        Addresses updatedAddress = authService.updateAddress(addressId, userId, addressDetails);
+        return ResponseEntity.ok(updatedAddress);
     }
 }

@@ -148,4 +148,9 @@ public class InventoryService {
             System.err.println("Audit logging failed in Inventory Service: " + e.getMessage());
         }
     }
+    
+    public Inventory getInventoryByProductIdAndVariantId(Long productId, Long variantId) {
+		return inventoryRepository.findByProductIdAndVariantId(productId, variantId)
+				.orElseThrow(() -> new ResourceNotFoundException("Inventory not found for Product ID: " + productId + " and Variant ID: " + variantId));
+	}
 }

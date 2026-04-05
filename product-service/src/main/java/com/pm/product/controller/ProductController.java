@@ -48,4 +48,10 @@ public class ProductController {
     public ResponseEntity<ProductVariant> getVariantById(@PathVariable Long variantId) {
         return ResponseEntity.ok(productService.getVariantById(variantId));
     }
+    
+    @GetMapping("/search")
+    public ResponseEntity<List<Product>> search(@RequestParam("q") String query) {
+        List<Product> results = productService.searchProducts(query);
+        return ResponseEntity.ok(results);
+    }
 }

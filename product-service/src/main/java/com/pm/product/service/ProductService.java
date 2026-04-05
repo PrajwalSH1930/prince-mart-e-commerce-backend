@@ -132,4 +132,11 @@ public class ProductService {
             System.err.println("Audit logging failed in Product Service: " + e.getMessage());
         }
     }
+    
+ // Inside your ProductService class
+    public List<Product> searchProducts(String query) {
+        return productRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseOrBrandContainingIgnoreCase(query, query, query);
+    }
+    
+    
 }

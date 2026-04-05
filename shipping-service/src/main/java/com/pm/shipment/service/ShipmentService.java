@@ -10,6 +10,8 @@ import com.pm.shipment.exception.ResourceNotFoundException;
 import com.pm.shipment.repository.ShipmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -129,4 +131,8 @@ public class ShipmentService {
             System.err.println("Audit logging failed in Shipment Service: " + e.getMessage());
         }
     }
+    
+    public List<Shipment> getAllShipments() {
+		return shipmentRepository.findAll();
+	}
 }

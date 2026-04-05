@@ -55,7 +55,7 @@ spring:
         - id: order-service
           uri: lb://ORDER-SERVICE
           predicates:
-            - Path=/orders/**
+            - Path=/orders/**, /order-items/**
           filters:
             - AuthenticationFilter
             - name: CircuitBreaker
@@ -151,7 +151,7 @@ resilience4j:
   timelimiter:
     configs:
       default:
-        timeoutDuration: 10s
+        timeoutDuration: 20s
 
 eureka:
   instance:

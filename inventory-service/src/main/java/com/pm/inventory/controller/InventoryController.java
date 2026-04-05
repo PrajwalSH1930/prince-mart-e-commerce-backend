@@ -67,4 +67,11 @@ public class InventoryController {
         inventoryService.addStockBulk(updates);
         return ResponseEntity.ok("Stock restored successfully");
     }
+    
+    @GetMapping("/product/{productId}/variant/{variantId}")
+    public ResponseEntity<Inventory> getInventoryByProductAndVariant(
+			@PathVariable Long productId,
+			@PathVariable Long variantId) {
+		return ResponseEntity.ok(inventoryService.getInventoryByProductIdAndVariantId(productId, variantId));
+	}
 }
