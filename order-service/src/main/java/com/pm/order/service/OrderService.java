@@ -7,6 +7,7 @@ import com.pm.order.entity.Order;
 import com.pm.order.entity.OrderItem;
 import com.pm.order.entity.OrderStatusHistory;
 import com.pm.order.exception.ResourceNotFoundException;
+import com.pm.order.repository.OrderItemRepository;
 import com.pm.order.repository.OrderRepository;
 import com.pm.order.repository.OrderStatusHistoryRepository;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,8 @@ public class OrderService {
                         ShippingClient shippingClient,
                         CouponClient couponClient,
                         AuditClient auditClient,
-                        ObjectMapper objectMapper) {
+                        ObjectMapper objectMapper,
+                        OrderItemRepository orderItemRepository) {
         this.orderRepository = orderRepository;
         this.historyRepository = historyRepository;
         this.cartClient = cartClient;

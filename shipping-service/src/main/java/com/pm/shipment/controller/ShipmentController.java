@@ -49,4 +49,9 @@ public class ShipmentController {
             @RequestParam String status) {
         return ResponseEntity.ok(shipmentService.updateShipmentStatus(shipmentId, status));
     }
+    
+    @GetMapping("/all")
+    public ResponseEntity<Iterable<Shipment>> getAllShipments() {
+		return ResponseEntity.ok(shipmentService.getAllShipments());
+	}
 }
