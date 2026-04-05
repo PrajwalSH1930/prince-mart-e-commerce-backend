@@ -3,7 +3,11 @@ package com.pm.coupon.controller;
 import com.pm.coupon.dto.CouponRequest;
 import com.pm.coupon.dto.CouponResponse;
 import com.pm.coupon.entity.Coupon;
+import com.pm.coupon.entity.CouponUsage;
 import com.pm.coupon.service.CouponService;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,5 +46,15 @@ public class CouponController {
             @RequestParam String code) {
         couponService.recordUsage(userId, orderId, code);
         return ResponseEntity.ok().build();
+    }
+    
+    @GetMapping("/all")
+    public ResponseEntity<List<Coupon>> getAllCoupons() {
+		return ResponseEntity.ok(couponService.getAllCoupons());
+	}
+    
+    @GetMapping("/usage/all")
+    public ResponseEntity<List<CouponUsage>> getAllCouponUsages() {
+    			return ResponseEntity.ok(couponService.getAllCouponUsages());
     }
 }

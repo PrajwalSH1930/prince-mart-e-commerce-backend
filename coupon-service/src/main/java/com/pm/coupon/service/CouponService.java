@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class CouponService {
@@ -149,5 +150,13 @@ public class CouponService {
         } catch (Exception e) {
             System.err.println("Audit logging failed in Coupon Service: " + e.getMessage());
         }
+    }
+    
+    public List<Coupon> getAllCoupons() {
+		return couponRepository.findAll();
+	}
+    
+    public List<CouponUsage> getAllCouponUsages() {
+    	return usageRepository.findAll();
     }
 }
