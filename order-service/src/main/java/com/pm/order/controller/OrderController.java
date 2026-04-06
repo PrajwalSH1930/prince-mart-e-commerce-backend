@@ -21,6 +21,11 @@ public class OrderController {
     public String welcome() {
         return "Welcome!! This is the Order Service for Prince Mart by Prince Inc.";
     }
+    
+    @GetMapping("/all")
+    public ResponseEntity<List<Order>> getAllOrders() {
+		return ResponseEntity.ok(orderService.getAllOrders());
+	}
 
     @PostMapping("/place")
     public ResponseEntity<Order> placeOrder(
@@ -67,4 +72,16 @@ public class OrderController {
 		List<Order> orders = orderService.getMyOrders(userId);
 		return ResponseEntity.ok(orders);
 	}
+    
+ // Inside OrderController.java
+    @PutMapping("/{orderId}/cancel")
+    public ResponseEntity<Order> cancelOrder(
+        @PathVariable Long orderId, 
+        @RequestHeader("X-User-Id") Long userId) {
+        
+        // Logic: Find order, verify userId, check if status is PENDING/CONFIRMED, 
+        // then set to CANCELLED and trigger Inventory Release.
+        Order cancelledOrder = orderService.cancelOrder(orderId, userId);
+        return ResponseEntity.ok(cancelledOrder);
+    }
 }

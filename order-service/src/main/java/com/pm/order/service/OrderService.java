@@ -10,6 +10,7 @@ import com.pm.order.exception.ResourceNotFoundException;
 import com.pm.order.repository.OrderItemRepository;
 import com.pm.order.repository.OrderRepository;
 import com.pm.order.repository.OrderStatusHistoryRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -270,5 +271,63 @@ public class OrderService {
     
     public List<Order> getMyOrders(Long userId) {
 		return orderRepository.findByUserId(userId);
+	}
+
+    @Transactional
+    public Order cancelOrder(Long orderId, Long userId) {
+        // 1. Fetch the Order
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order Registry entry not found"));
+
+        // 2. Security Check: Ensure the order belongs to the user
+        if (!order.getUserId().equals(userId)) {
+            throw new ResourceNotFoundException("Access Denied: This is not your acquisition.");
+        }
+
+        // 3. Business Logic: Check if status is still cancellable
+        String currentStatus = order.getOrderStatus().toUpperCase();
+        if (currentStatus.equals("SHIPPED") || currentStatus.equals("DELIVERED")) {
+            throw new IllegalStateException("Logistics already initiated. Cannot cancel at this stage.");
+        }
+        
+        if (currentStatus.equals("CANCELLED")) {
+            throw new IllegalStateException("This order is already revoked.");
+        }
+
+        // 4. Capture Data Before for Auditing
+        String dataBefore = null;
+        try { dataBefore = objectMapper.writeValueAsString(order); } catch (Exception e) {}
+
+        // 5. Inventory Compensation (Restoring Stock)
+        List<StockUpdateDTO> stockToRestore = order.getItems().stream()
+                .map(item -> new StockUpdateDTO(item.getVariantId(), item.getQuantity()))
+                .collect(Collectors.toList());
+
+        try {
+            // Using your existing Feign Client method
+            inventoryClient.addStock(stockToRestore);
+        } catch (Exception e) {
+            System.err.println("CRITICAL: Failed to restore stock during user cancellation - " + e.getMessage());
+            // Depending on your policy, you might want to throw an exception here 
+            // to roll back the order status change if inventory can't be updated.
+            throw new RuntimeException("Inventory Service communication failure.");
+        }
+
+        // 6. Update Order Status
+        order.setOrderStatus("CANCELLED");
+        Order cancelledOrder = orderRepository.save(order);
+        
+        // 7. Record History
+        saveHistory(cancelledOrder, "CANCELLED_BY_USER", "CUSTOMER_ACTION");
+
+        // 8. Audit the cancellation
+        sendAuditLog(userId, "USER_ORDER_CANCELLATION", dataBefore, cancelledOrder);
+
+        return cancelledOrder;
+    }
+
+	public List<Order> getAllOrders() {
+		// TODO Auto-generated method stub
+		return orderRepository.findAll();
 	}
 }
