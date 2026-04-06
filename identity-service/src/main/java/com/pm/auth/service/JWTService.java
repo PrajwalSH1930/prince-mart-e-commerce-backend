@@ -16,9 +16,11 @@ public class JWTService {
 
     public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
 
-    public String generateToken(String username, Long userId) {
+    // UPDATED: Added role parameter
+    public String generateToken(String username, Long userId, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId); 
+        claims.put("role", role); // Store the role (e.g., "ADMIN" or "CUSTOMER")
         return createToken(claims, username);
     }
 
@@ -27,6 +29,7 @@ public class JWTService {
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
+                // Token valid for 24 hours
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
@@ -45,12 +48,22 @@ public class JWTService {
     }
 
     public String extractUserId(String token) {
-        Claims claims = Jwts.parser()
+        Claims claims = extractAllClaims(token);
+        return String.valueOf(claims.get("userId"));
+    }
+
+    // NEW: Added method to extract role directly
+    public String extractRole(String token) {
+        Claims claims = extractAllClaims(token);
+        return (String) claims.get("role");
+    }
+
+    // Helper method to parse claims
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
                 .setSigningKey(getSignKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-                
-        return String.valueOf(claims.get("userId"));
     }
 }

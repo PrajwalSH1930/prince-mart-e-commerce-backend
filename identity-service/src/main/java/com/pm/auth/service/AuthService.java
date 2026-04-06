@@ -71,7 +71,9 @@ public class AuthService {
                 
                 sendAuditLog(user.getUserId(), "USER_LOGIN", "Email: " + email, "SUCCESS");
                 
-                return jwtService.generateToken(email, user.getUserId());
+                // UPDATED: Now passing the user's role to the JWT generator
+                // user.getRole().name() converts the Role Enum to a String (e.g., "ADMIN")
+                return jwtService.generateToken(email, user.getUserId(), user.getRole().name());
             } else {
                 throw new RuntimeException("Invalid Access");
             }
