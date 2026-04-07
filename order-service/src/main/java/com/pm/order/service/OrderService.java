@@ -330,4 +330,9 @@ public class OrderService {
 		// TODO Auto-generated method stub
 		return orderRepository.findAll();
 	}
+	
+	public Order getOrderByIdForAdmin(Long orderId) {
+	    return orderRepository.findById(orderId)
+	            .orElseThrow(() -> new ResourceNotFoundException("Order " + orderId + " not found in global registry"));
+	}
 }
