@@ -46,6 +46,15 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderDetails(orderId, userId));
     }
     
+ // Inside OrderController.java
+
+    @GetMapping("/admin/order/{orderId}")
+    public ResponseEntity<Order> getOrderDetailsForAdmin(@PathVariable Long orderId) {
+        // We call the service without the userId restriction
+        // Make sure to add this method to your OrderService as well
+        return ResponseEntity.ok(orderService.getOrderByIdForAdmin(orderId));
+    }
+    
     @PutMapping("/{orderId}/status")
     public ResponseEntity<Order> updateStatus(
             @PathVariable Long orderId,
