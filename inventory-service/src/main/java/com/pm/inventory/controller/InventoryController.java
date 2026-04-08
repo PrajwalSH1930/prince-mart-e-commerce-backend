@@ -69,9 +69,22 @@ public class InventoryController {
     }
     
     @GetMapping("/product/{productId}/variant/{variantId}")
-    public ResponseEntity<Inventory> getInventoryByProductAndVariant(
+    public List<ResponseEntity<Inventory>> getInventoryByProductAndVariant(
 			@PathVariable Long productId,
 			@PathVariable Long variantId) {
-		return ResponseEntity.ok(inventoryService.getInventoryByProductIdAndVariantId(productId, variantId));
+    			return inventoryService.getInventoryByProductIdAndVariantId(productId, variantId)
+				.stream()
+				.map(ResponseEntity::ok)
+				.toList();
 	}
+    
+    @GetMapping("/all")
+    public ResponseEntity<List<Inventory>> getAllInventories() {
+		return ResponseEntity.ok(inventoryService.getAllInventories());
+	}
+    
+    @GetMapping("/warehouse/all")
+    public ResponseEntity<List<Warehouse>> getAllWarehouses() {
+    			return ResponseEntity.ok(inventoryService.getAllWarehouses());
+    }
 }

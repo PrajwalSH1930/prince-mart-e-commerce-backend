@@ -11,6 +11,7 @@ import com.pm.inventory.exception.ResourceNotFoundException;
 import com.pm.inventory.repository.InventoryRepository;
 import com.pm.inventory.repository.TransactionRepository;
 import com.pm.inventory.repository.WarehouseRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -149,8 +150,17 @@ public class InventoryService {
         }
     }
     
-    public Inventory getInventoryByProductIdAndVariantId(Long productId, Long variantId) {
-		return inventoryRepository.findByProductIdAndVariantId(productId, variantId)
-				.orElseThrow(() -> new ResourceNotFoundException("Inventory not found for Product ID: " + productId + " and Variant ID: " + variantId));
+    public List<Inventory> getInventoryByProductIdAndVariantId(Long productId, Long variantId) {
+		return inventoryRepository.findByProductIdAndVariantId(productId, variantId);
+	}
+
+	public List<Inventory> getAllInventories() {
+		// TODO Auto-generated method stub
+		return inventoryRepository.findAll();
+	}
+	
+	public List<Warehouse> getAllWarehouses() {
+		// TODO Auto-generated method stub
+		return warehouseRepository.findAll();
 	}
 }

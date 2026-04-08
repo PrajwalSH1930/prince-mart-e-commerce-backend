@@ -138,5 +138,8 @@ public class ProductService {
         return productRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseOrBrandContainingIgnoreCase(query, query, query);
     }
     
+    public List<ProductVariant> getAllVariants() {
+		return productVariantRepository.findAll();
+	}
     
 }

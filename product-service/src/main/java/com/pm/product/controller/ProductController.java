@@ -54,4 +54,9 @@ public class ProductController {
         List<Product> results = productService.searchProducts(query);
         return ResponseEntity.ok(results);
     }
+    
+    @GetMapping("/variants/all")
+    public ResponseEntity<List<ProductVariant>> getAllVariants() {
+		return ResponseEntity.ok(productService.getAllVariants());
+	}
 }

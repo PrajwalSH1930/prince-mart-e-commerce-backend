@@ -115,4 +115,19 @@ public class AuthController {
         Addresses updatedAddress = authService.updateAddress(addressId, userId, addressDetails);
         return ResponseEntity.ok(updatedAddress);
     }
+    
+    @GetMapping("/all-users")
+    public ResponseEntity<List<User>> getAllUsers() {
+		return ResponseEntity.ok(userRepository.findAll());
+	}
+    
+    @GetMapping("/userprofile/{userId}")
+    public ResponseEntity<UserProfile> getUserProfileByUserId(@PathVariable Long userId) {
+		return ResponseEntity.ok(authService.getProfileByUserId(userId));
+	}
+    
+    @GetMapping("/addresses/user/{userId}")
+    public ResponseEntity<List<Addresses>> getAddressesByUserId(@PathVariable Long userId) {
+    			return ResponseEntity.ok(authService.getUserAddresses(userId));
+    }
 }

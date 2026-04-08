@@ -237,5 +237,9 @@ public class AuthService {
         return addressRepository.save(existing);
     }
     
+    public UserProfile getUserProfileByUserId(Long userId) {
+		return userProfileRepository.findByUserUserId(userId)
+				.orElseThrow(() -> new ResourceNotFoundException("User not found"));
+	}
     	
 }
