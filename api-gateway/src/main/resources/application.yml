@@ -140,6 +140,11 @@ spring:
                 name: auditServiceCB
                 fallbackUri: forward:/fallback/audit-fallback
 
+        - id: subscription-service
+          uri: lb://SUBSCRIPTION-SERVICE
+          predicates:
+            - Path=/subscriptions/**
+
 resilience4j:
   circuitbreaker:
     configs:
@@ -151,7 +156,7 @@ resilience4j:
   timelimiter:
     configs:
       default:
-        timeoutDuration: 20s
+        timeoutDuration: 30s
 
 eureka:
   instance:
