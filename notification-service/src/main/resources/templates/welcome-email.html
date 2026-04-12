@@ -1,89 +1,97 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body style="margin:0; padding:0; background-color:#eef2f7; font-family:Segoe UI, Arial, sans-serif;">
+<body style="margin:0; padding:0; background-color:#ffffff; font-family: serif;">
 
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:20px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
 <tr>
 <td align="center">
 
-<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:14px; overflow:hidden; border:1px solid #e6ebf1;">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border:1px solid #f0f0f0; overflow:hidden;">
 
     <tr>
-        <td align="center" style="background:#1e3c72; background:linear-gradient(135deg,#1e3c72,#2a5298); padding:45px 20px 25px 20px;">
+        <td align="center" style="background:#000000; padding:60px 20px 45px 20px;">
             
-            <img src="https://drive.google.com/uc?export=view&id=1HkBB_xttRPsJZ9Lt8Ddq36_CiHOcb6iC" 
-                 width="110" 
-                 style="display:block; margin-bottom:15px; border-radius:12px; background:#ffffff; padding:8px;">
+            <div style="margin-bottom:20px;">
+                <span style="font-size: 32px;">👑</span>
+            </div>
 
-            <h1 style="color:#ffffff; margin:0; font-size:26px; font-weight:600;">Welcome to the Family! 👑</h1>
+            <h1 style="color:#ffffff; margin:0; font-size:28px; font-weight:italic; font-style: italic; letter-spacing: -0.5px; text-transform: uppercase;">
+                The Sovereign Entry
+            </h1>
             
-            <p style="color:#dfe6f1; margin-top:10px; font-size:14px;">
-                Your journey with <strong>Prince Mart</strong> starts here.
+            <p style="color:rgba(255,255,255,0.4); margin-top:15px; font-size:9px; text-transform: uppercase; letter-spacing: 5px; font-family: sans-serif; font-weight: bold;">
+                Welcome to Prince Mart
             </p>
         </td>
     </tr>
 
     <tr>
-        <td style="padding:25px 30px; color:#333333;">
+        <td style="padding:50px 45px; color:#000000;">
 
-            <p style="font-size:16px; margin-bottom:5px;">
-                Hi <strong th:text="${customerName}">User</strong>,
+            <p style="font-size:18px; font-style: italic; margin-bottom:10px;">
+                Greetings <strong th:text="${customerName}" style="font-weight: normal; border-bottom: 1px solid #000;">User</strong>,
             </p>
 
-            <p style="font-size:15px; color:#555; line-height:1.6;">
-                We are absolutely thrilled to have you join us! At <strong>Prince Mart</strong>, we strive to bring you the best quality products with a service that makes you feel like royalty. 🚀
+            <p style="font-size:12px; text-transform: uppercase; letter-spacing: 2px; color:#888; font-family: sans-serif; font-weight: bold; margin-bottom: 30px;">
+                Your account has been successfully indexed.
             </p>
 
-            <hr style="border:none; border-top:1px solid #eceff3; margin:25px 0;">
+            <p style="font-size:14px; line-height:1.8; color:#444; font-family: sans-serif; letter-spacing: 0.5px;">
+                You are now part of an elite registry that prioritizes quality, variety, and the architectural precision of high-end commerce. Your journey into the <strong>Prince Mart</strong> atelier begins now.
+            </p>
+
+            <div style="margin: 40px 0; border-top: 1px solid #000; width: 40px;"></div>
 
             <table width="100%" cellpadding="0" cellspacing="0" 
-                   style="background:#f8fafc; border:1px solid #e3e8ef; border-radius:12px; padding:20px;">
+                   style="background:#fcfcfc; border:1px solid #f0f0f0; padding:25px;">
                 <tr>
-                    <td style="font-size:14px; line-height:1.6; color:#1e3c72;">
-                        <strong>Account Status:</strong> Active ✅<br>
-                        <strong>Username:</strong> <span th:text="${email}">user@example.com</span><br>
-                        <p style="margin-top:10px; font-size:13px; color:#555;">
-                            You can now explore thousands of products, create wishlists, and track your orders in real-time.
+                    <td style="font-size:11px; line-height:2; font-family: sans-serif; text-transform: uppercase; letter-spacing: 2px;">
+                        <strong style="color:#000;">Identity Status:</strong> <span style="color: #000; font-weight: 900;">Verified ✔</span><br>
+                        <strong style="color:#000;">Registry Mail:</strong> <span th:text="${email}" style="color: #888;">user@example.com</span>
+                        
+                        <p style="margin-top:15px; font-size:10px; color:#aaa; line-height: 1.6; font-style: italic; text-transform: none; letter-spacing: 0.5px;">
+                            You may now curate your personal collection, manage wishlists, and execute acquisitions with real-time logistical tracking.
                         </p>
                     </td>
                 </tr>
             </table>
 
-            <div style="text-align:center; margin:35px 0;">
+            <div style="text-align:center; margin:45px 0;">
                 <a href="http://localhost:3000/shop" 
-                   style="background:#2a5298;
-                          background:linear-gradient(135deg,#2a5298,#1e3c72);
+                   style="background:#000000;
                           color:#ffffff;
-                          padding:14px 34px;
+                          padding:18px 45px;
                           text-decoration:none;
-                          border-radius:8px;
-                          font-size:15px;
-                          font-weight:600;
+                          font-size:10px;
+                          font-weight:bold;
+                          text-transform: uppercase;
+                          letter-spacing: 3px;
                           display:inline-block;
-                          box-shadow:0 4px 12px rgba(0,0,0,0.15);">
-                    Start Shopping Now →
+                          font-family: sans-serif;
+                          box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+                    Explore Atelier →
                 </a>
             </div>
 
-            <p style="font-size:12px; text-align:center; color:#888; margin-top:20px;">
-                ✔ Quality Assured &nbsp; • &nbsp; ✔ Fast Shipping &nbsp; • &nbsp; ✔ 24/7 Support
+            <p style="font-size:9px; text-align:center; color:#ccc; margin-top:40px; text-transform: uppercase; letter-spacing: 3px; font-family: sans-serif;">
+                Quality Assured • High-Velocity Shipping • Sovereign Support
             </p>
 
         </td>
     </tr>
 
     <tr>
-        <td style="background:#f4f6f9; text-align:center; padding:25px; font-size:12px; color:#777;">
+        <td style="background:#000000; text-align:center; padding:50px 25px; font-size:10px; color:#ffffff; font-family: sans-serif;">
             
-            <strong style="color:#1e3c72; font-size:15px">Prince Mart</strong> 👑<br>
-            Quality • Variety • Service<br><br>
+            <strong style="font-size:16px; letter-spacing: 4px; font-weight: bold;">PRINCE MART</strong><br>
+            <span style="opacity: 0.4; text-transform: uppercase; letter-spacing: 2px;">The Standard of Excellence</span><br><br>
 
-            Bailhongal, India<br><br>
+            <div style="margin: 20px 0; border-top: 1px solid rgba(255,255,255,0.1); width: 30px; display: inline-block;"></div><br>
 
-            📧 support@princemart.com<br><br>
+            Bailhongal, Karnataka<br><br>
 
-            <span style="font-size:11px; color:#aaa;">
-                © 2026 Prince Mart by Prince Inc. <br>All rights reserved.
+            <span style="font-size:9px; color:rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 2px;">
+                © 2026 Prince Mart by Prince Inc. <br>System_Access_Secure
             </span>
         </td>
     </tr>
