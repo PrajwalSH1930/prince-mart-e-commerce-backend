@@ -9,7 +9,7 @@ spring:
     gateway:
       httpclient:
         connect-timeout: 2000
-        response-timeout: 3s
+        response-timeout: 15s
       routes:
 
         - id: identity-service
@@ -170,13 +170,13 @@ resilience4j:
       default:
         slidingWindowSize: 10
         failureRateThreshold: 50
-        waitDurationInOpenState: 5s
+        waitDurationInOpenState: 15s
         permittedNumberOfCallsInHalfOpenState: 3
 
   timelimiter:
     configs:
       default:
-        timeoutDuration: 3s   # 🔥 CRITICAL FIX (was 30s ❌)
+        timeoutDuration: 15s # 🔥 CRITICAL FIX (was 30s ❌)
 
 logging:
   level:
