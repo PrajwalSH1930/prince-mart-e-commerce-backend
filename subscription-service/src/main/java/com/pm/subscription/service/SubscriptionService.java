@@ -12,6 +12,7 @@ import com.pm.subscription.repository.SubscriptionRepository;
 import com.pm.subscription.entity.Subscription;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 @Service
 public class SubscriptionService {
@@ -67,13 +68,19 @@ public class SubscriptionService {
         mailSender.send(message);
     }
 
-    public boolean unsubscribe(String email) {
-        var subscriptionOpt = subscriptionRepository.findByEmail(email);
-        if (subscriptionOpt.isEmpty()) {
-            return false;
-        }
-        
-        subscriptionRepository.delete(subscriptionOpt.get());
-        return true;
-    }
+    
+    public List<Subscription> getAllSubscriptions() {
+		return subscriptionRepository.findAll();
+	}
+    
+    public Subscription deleteSubscription(Long id) {
+		var subscriptionOpt = subscriptionRepository.findById(id);
+		if (subscriptionOpt.isEmpty()) {
+			return null;
+		}
+		
+		Subscription subscription = subscriptionOpt.get();
+		subscriptionRepository.delete(subscription);
+		return subscription;
+	}
 }
