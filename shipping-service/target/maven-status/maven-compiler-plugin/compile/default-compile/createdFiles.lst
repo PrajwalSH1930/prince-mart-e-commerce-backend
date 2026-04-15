@@ -1,0 +1,14 @@
+com\pm\shipment\client\NotificationClient.class
+com\pm\shipment\ShipmentServiceApplication.class
+com\pm\shipment\entity\Shipment.class
+com\pm\shipment\dto\NotificationRequest.class
+com\pm\shipment\service\ShipmentService.class
+com\pm\shipment\controller\ShipmentController.class
+com\pm\shipment\dto\NotificationClient.class
+com\pm\shipment\client\AuditClient.class
+com\pm\shipment\repository\ShipmentRepository.class
+com\pm\shipment\exception\ErrorDetails.class
+com\pm\shipment\exception\ResourceNotFoundException.class
+com\pm\shipment\exception\GlobalExceptionHandler.class
+com\pm\shipment\dto\AuditLogRequest.class
+com\pm\shipment\entity\ShipmentItems.class

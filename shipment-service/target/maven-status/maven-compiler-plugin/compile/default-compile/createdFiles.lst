@@ -1,0 +1,6 @@
+com\pm\shipment\ShipmentServiceApplication.class
+com\pm\shipment\entity\Shipment.class
+com\pm\shipment\service\ShipmentService.class
+com\pm\shipment\controller\ShipmentController.class
+com\pm\shipment\repository\ShipmentRepository.class
+com\pm\shipment\entity\ShipmentItems.class

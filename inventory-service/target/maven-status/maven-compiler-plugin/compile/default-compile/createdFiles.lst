@@ -1,0 +1,16 @@
+com\pm\inventory\controller\InventoryController.class
+com\pm\inventory\entity\Warehouse.class
+com\pm\inventory\exception\GlobalExceptionHandler.class
+com\pm\inventory\entity\Inventory.class
+com\pm\inventory\exception\ResourceNotFoundException.class
+com\pm\inventory\dto\StockUpdateDTO.class
+com\pm\inventory\InventoryServiceApplication.class
+com\pm\inventory\repository\TransactionRepository.class
+com\pm\inventory\exception\ErrorDetails.class
+com\pm\inventory\service\InventoryService.class
+com\pm\inventory\dto\AuditLogRequest.class
+com\pm\inventory\entity\InventoryTransaction$TransactionType.class
+com\pm\inventory\client\AuditClient.class
+com\pm\inventory\repository\WarehouseRepository.class
+com\pm\inventory\entity\InventoryTransaction.class
+com\pm\inventory\repository\InventoryRepository.class

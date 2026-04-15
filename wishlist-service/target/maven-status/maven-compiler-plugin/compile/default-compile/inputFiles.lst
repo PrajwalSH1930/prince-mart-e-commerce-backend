@@ -1,0 +1,17 @@
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\client\AuditClient.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\client\ProductClient.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\controller\WishlistController.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\dto\AuditLogRequest.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\dto\ProductResponse.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\dto\ProductVariantResponse.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\dto\WishlistRequest.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\dto\WishlistResponse.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\entity\Wishlist.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\entity\WishlistItem.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\exception\ErrorDetails.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\exception\GlobalExceptionHandler.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\exception\ResourceNotFoundException.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\repository\WishlistItemRepository.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\repository\WishlistRepository.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\service\WishlistService.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\wishlist-service\src\main\java\com\pm\wishlist\WishlistServiceApplication.java

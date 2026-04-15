@@ -1,0 +1,16 @@
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\client\AuditClient.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\client\OrderClient.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\client\UserClient.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\controller\ReviewController.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\dto\AuditLogRequest.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\dto\ProductRatingResponse.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\dto\ReviewRequest.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\dto\ReviewResponse.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\dto\UserResponse.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\entity\Review.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\exception\ErrorDetails.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\exception\GlobalExceptionHandler.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\exception\ResourceNotFoundException.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\repository\ReviewRepository.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\ReviewServiceApplication.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\review-service\src\main\java\com\pm\review\service\ReviewService.java
