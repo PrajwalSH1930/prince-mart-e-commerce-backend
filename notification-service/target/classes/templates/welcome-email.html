@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body style="margin:0; padding:0; background-color:#ffffff; font-family: serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+<tr>
+<td align="center">
+
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border:1px solid #f0f0f0; overflow:hidden;">
+
+    <tr>
+        <td align="center" style="background:#000000; padding:60px 20px 45px 20px;">
+            
+            <div style="margin-bottom:20px;">
+                <span style="font-size: 32px;">👑</span>
+            </div>
+
+            <h1 style="color:#ffffff; margin:0; font-size:28px; font-weight:italic; font-style: italic; letter-spacing: -0.5px; text-transform: uppercase;">
+                The Sovereign Entry
+            </h1>
+            
+            <p style="color:rgba(255,255,255,0.4); margin-top:15px; font-size:9px; text-transform: uppercase; letter-spacing: 5px; font-family: sans-serif; font-weight: bold;">
+                Welcome to Prince Mart
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding:50px 45px; color:#000000;">
+
+            <p style="font-size:18px; font-style: italic; margin-bottom:10px;">
+                Greetings <strong th:text="${customerName}" style="font-weight: normal; border-bottom: 1px solid #000;">User</strong>,
+            </p>
+
+            <p style="font-size:12px; text-transform: uppercase; letter-spacing: 2px; color:#888; font-family: sans-serif; font-weight: bold; margin-bottom: 30px;">
+                Your account has been successfully indexed.
+            </p>
+
+            <p style="font-size:14px; line-height:1.8; color:#444; font-family: sans-serif; letter-spacing: 0.5px;">
+                You are now part of an elite registry that prioritizes quality, variety, and the architectural precision of high-end commerce. Your journey into the <strong>Prince Mart</strong> atelier begins now.
+            </p>
+
+            <div style="margin: 40px 0; border-top: 1px solid #000; width: 40px;"></div>
+
+            <table width="100%" cellpadding="0" cellspacing="0" 
+                   style="background:#fcfcfc; border:1px solid #f0f0f0; padding:25px;">
+                <tr>
+                    <td style="font-size:11px; line-height:2; font-family: sans-serif; text-transform: uppercase; letter-spacing: 2px;">
+                        <strong style="color:#000;">Identity Status:</strong> <span style="color: #000; font-weight: 900;">Verified ✔</span><br>
+                        <strong style="color:#000;">Registry Mail:</strong> <span th:text="${email}" style="color: #888;">user@example.com</span>
+                        
+                        <p style="margin-top:15px; font-size:10px; color:#aaa; line-height: 1.6; font-style: italic; text-transform: none; letter-spacing: 0.5px;">
+                            You may now curate your personal collection, manage wishlists, and execute acquisitions with real-time logistical tracking.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+
+            <div style="text-align:center; margin:45px 0;">
+                <a href="http://localhost:3000/shop" 
+                   style="background:#000000;
+                          color:#ffffff;
+                          padding:18px 45px;
+                          text-decoration:none;
+                          font-size:10px;
+                          font-weight:bold;
+                          text-transform: uppercase;
+                          letter-spacing: 3px;
+                          display:inline-block;
+                          font-family: sans-serif;
+                          box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+                    Explore Atelier →
+                </a>
+            </div>
+
+            <p style="font-size:9px; text-align:center; color:#ccc; margin-top:40px; text-transform: uppercase; letter-spacing: 3px; font-family: sans-serif;">
+                Quality Assured • High-Velocity Shipping • Sovereign Support
+            </p>
+
+        </td>
+    </tr>
+
+    <tr>
+        <td style="background:#000000; text-align:center; padding:50px 25px; font-size:10px; color:#ffffff; font-family: sans-serif;">
+            
+            <strong style="font-size:16px; letter-spacing: 4px; font-weight: bold;">PRINCE MART</strong><br>
+            <span style="opacity: 0.4; text-transform: uppercase; letter-spacing: 2px;">The Standard of Excellence</span><br><br>
+
+            <div style="margin: 20px 0; border-top: 1px solid rgba(255,255,255,0.1); width: 30px; display: inline-block;"></div><br>
+
+            Bailhongal, Karnataka<br><br>
+
+            <span style="font-size:9px; color:rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 2px;">
+                © 2026 Prince Mart by Prince Inc. <br>System_Access_Secure
+            </span>
+        </td>
+    </tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>

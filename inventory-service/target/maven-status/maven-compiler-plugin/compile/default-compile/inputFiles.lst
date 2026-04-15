@@ -1,0 +1,15 @@
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\client\AuditClient.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\controller\InventoryController.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\dto\AuditLogRequest.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\dto\StockUpdateDTO.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\entity\Inventory.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\entity\InventoryTransaction.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\entity\Warehouse.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\exception\ErrorDetails.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\exception\GlobalExceptionHandler.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\exception\ResourceNotFoundException.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\InventoryServiceApplication.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\repository\InventoryRepository.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\repository\TransactionRepository.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\repository\WarehouseRepository.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\inventory-service\src\main\java\com\pm\inventory\service\InventoryService.java

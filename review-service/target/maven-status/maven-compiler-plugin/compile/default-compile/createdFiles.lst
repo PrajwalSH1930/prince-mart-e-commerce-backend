@@ -1,0 +1,17 @@
+com\pm\review\exception\ErrorDetails.class
+com\pm\review\client\UserClient.class
+com\pm\review\dto\UserResponse.class
+com\pm\review\entity\Review.class
+com\pm\review\dto\AuditLogRequest.class
+com\pm\review\dto\ReviewRequest.class
+com\pm\review\controller\ReviewController.class
+com\pm\review\repository\ReviewRepository.class
+com\pm\review\client\OrderClient.class
+com\pm\review\exception\ResourceNotFoundException.class
+com\pm\review\ReviewServiceApplication.class
+com\pm\review\dto\ReviewResponse$ReviewResponseBuilder.class
+com\pm\review\dto\ProductRatingResponse.class
+com\pm\review\exception\GlobalExceptionHandler.class
+com\pm\review\dto\ReviewResponse.class
+com\pm\review\client\AuditClient.class
+com\pm\review\service\ReviewService.class

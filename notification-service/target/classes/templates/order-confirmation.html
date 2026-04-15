@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body style="margin:0; padding:0; background-color:#ffffff; font-family: serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
+<tr>
+<td align="center">
+
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border:1px solid #f0f0f0; overflow:hidden;">
+
+    <tr>
+        <td align="center" style="background:#000000; padding:60px 20px 40px 20px;">
+            
+            <div style="margin-bottom:20px;">
+                <span style="font-size: 32px;">👑</span>
+            </div>
+
+            <h1 style="color:#ffffff; margin:0; font-size:24px; font-weight:italic; font-style: italic; letter-spacing: -0.5px; text-transform: uppercase;" th:if="${amount == 'PACKING'}">Registry Confirmed</h1>
+            <h1 style="color:#ffffff; margin:0; font-size:24px; font-weight:italic; font-style: italic; letter-spacing: -0.5px; text-transform: uppercase;" th:if="${amount == 'SHIPPED'}">Atelier Dispatch</h1>
+            <h1 style="color:#ffffff; margin:0; font-size:24px; font-weight:italic; font-style: italic; letter-spacing: -0.5px; text-transform: uppercase;" th:if="${amount == 'OUT_FOR_DELIVERY'}">Final Approach</h1>
+            <h1 style="color:#ffffff; margin:0; font-size:24px; font-weight:italic; font-style: italic; letter-spacing: -0.5px; text-transform: uppercase;" th:if="${amount == 'DELIVERED'}">Handover Complete</h1>
+            
+            <p style="color:rgba(255,255,255,0.4); margin-top:15px; font-size:9px; text-transform: uppercase; letter-spacing: 5px; font-family: sans-serif; font-weight: bold;">
+                The Sovereign Standard
+            </p>
+        </td>
+    </tr>
+
+    <tr>
+        <td style="padding:50px 40px; color:#000000;">
+
+            <p style="font-size:16px; font-style: italic; margin-bottom:10px;">
+                Greetings <strong th:text="${customerName}" style="font-weight: normal; border-bottom: 1px solid #000;">User</strong>,
+            </p>
+
+            <p style="font-size:12px; text-transform: uppercase; letter-spacing: 2px; color:#888; font-family: sans-serif; font-weight: bold;">
+                Status Update Protocol Initiated.
+            </p>
+
+            <p style="font-size:13px; line-height:1.8; margin-top:25px; color: #444; font-family: sans-serif; letter-spacing: 0.5px;">
+                <span th:if="${amount == 'PACKING'}">Your acquisition has been logged. Our atelier is currently refining your masterpieces for fulfillment.</span>
+                <span th:if="${amount == 'SHIPPED'}">The units have cleared the atelier gates and are now navigating the logistics pipeline.</span>
+                <span th:if="${amount == 'OUT_FOR_DELIVERY'}">Our courier is executing the final handover protocol. Arrival is imminent.</span>
+                <span th:if="${amount == 'DELIVERED'}">Handover successful. Your pieces are now part of your permanent collection.</span>
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" 
+                   style="margin-top:40px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding:25px 0;">
+                <tr>
+                    <td style="font-size:11px; font-family: sans-serif; text-transform: uppercase; letter-spacing: 2px;">
+                        <span style="color:#aaa;">Registry ID:</span> 
+                        <span th:text="${orderId}" style="color:#000; font-weight: bold; margin-left: 10px;">000</span>
+                    </td>
+                    <td align="right" style="font-size:11px; font-family: sans-serif; text-transform: uppercase; letter-spacing: 2px;">
+                        <span style="color:#aaa;">Protocol:</span>
+                        <span th:text="${amount}" style="color:#000; font-weight: bold; margin-left: 10px;">STATUS</span>
+                    </td>
+                </tr>
+            </table>
+
+            <table width="100%" style="margin:40px 0; text-align:center; font-family: sans-serif;">
+                <tr>
+                    <td style="font-size:9px; color:#000; font-weight:bold; text-transform: uppercase; letter-spacing: 1px;">Authenticated</td>
+                    
+                    <td th:style="${amount == 'PACKING' or amount == 'SHIPPED' or amount == 'OUT_FOR_DELIVERY' or amount == 'DELIVERED'} ? 'font-size:9px; color:#000; font-weight:bold; text-transform: uppercase; letter-spacing: 1px;' : 'font-size:9px; color:#ddd; text-transform: uppercase; letter-spacing: 1px;'">
+                        — Prepared
+                    </td>
+                    
+                    <td th:style="${amount == 'SHIPPED' or amount == 'OUT_FOR_DELIVERY' or amount == 'DELIVERED'} ? 'font-size:9px; color:#000; font-weight:bold; text-transform: uppercase; letter-spacing: 1px;' : 'font-size:9px; color:#ddd; text-transform: uppercase; letter-spacing: 1px;'">
+                        — Dispatched
+                    </td>
+                    
+                    <td th:style="${amount == 'DELIVERED'} ? 'font-size:9px; color:#000; font-weight:bold; text-transform: uppercase; letter-spacing: 1px;' : 'font-size:9px; color:#ddd; text-transform: uppercase; letter-spacing: 1px;'">
+                        — Received
+                    </td>
+                </tr>
+            </table>
+
+            <div style="text-align:center; margin:40px 0;">
+                <a th:href="@{'http://localhost:3000/orders/' + ${orderId}}" 
+                   style="background:#000000;
+                          color:#ffffff;
+                          padding:18px 45px;
+                          text-decoration:none;
+                          font-size:10px;
+                          font-weight:bold;
+                          text-transform: uppercase;
+                          letter-spacing: 3px;
+                          display:inline-block;
+                          font-family: sans-serif;">
+                    Access Registry Dashboard →
+                </a>
+            </div>
+
+            <p style="font-size:9px; text-align:center; color:#ccc; margin-top:40px; text-transform: uppercase; letter-spacing: 3px; font-family: sans-serif;">
+                Verified Logistics • Secured Data • Sovereign Service
+            </p>
+
+        </td>
+    </tr>
+
+    <tr>
+        <td style="background:#000000; text-align:center; padding:50px 25px; font-size:10px; color:#ffffff; font-family: sans-serif;">
+            
+            <strong style="font-size:16px; letter-spacing: 4px; font-weight: bold;">PRINCE MART</strong><br>
+            <span style="opacity: 0.4; text-transform: uppercase; letter-spacing: 2px;">The Atelier of Excellence</span><br><br>
+
+            <div style="margin: 20px 0; border-top: 1px solid rgba(255,255,255,0.1); width: 30px; display: inline-block;"></div><br>
+
+            Bailhongal, Karnataka<br><br>
+
+            <span style="font-size:9px; color:rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 2px;">
+                © 2026 Prince Mart by Prince Inc. <br>System_Access_Secure
+            </span>
+        </td>
+    </tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\api-gateway\src\main\java\com\pm\gateway\ApiGatewayApplication.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\api-gateway\src\main\java\com\pm\gateway\config\CorsConfig.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\api-gateway\src\main\java\com\pm\gateway\config\GatewaySecurityConfig.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\api-gateway\src\main\java\com\pm\gateway\controller\FallbackController.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\api-gateway\src\main\java\com\pm\gateway\filter\AuthenticationFilter.java
+C:\Users\Baryons\eclipse-workspace\prince-mart-e-commerce-backend\api-gateway\src\main\java\com\pm\gateway\filter\RouteValidator.java
