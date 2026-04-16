@@ -11,10 +11,16 @@ eureka:
     fetch-registry: false
 
   instance:
-    hostname: localhost
+    prefer-ip-address: false
+    hostname: pm-server-registry.onrender.com
 
   server:
-    enable-self-preservation: false   # ✅ good for dev
+    enable-self-preservation: false
     eviction-interval-timer-in-ms: 10000
     response-cache-update-interval-ms: 3000
     wait-time-in-ms-when-sync-empty: 0
+
+logging:
+  level:
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
