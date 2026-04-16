@@ -4,18 +4,26 @@ server:
 spring:
   application:
     name: audit-service
+  
   datasource:
-    url: jdbc:mysql://localhost:3306/pm_audit_db
-    username: root
-    password: Sprince1*
+    # Uses environment variables provided by Render, with your local DB as a fallback
+    url: ${AUDIT_DB_URL:jdbc:mysql://localhost:3306/pm_audit_db}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:Sprince1*}
+    
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 eureka:
   instance:
-    prefer-ip-address: true
+    # Use hostname on Render for better reliability in a container environment
+    prefer-ip-address: false
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      # Points to your LIVE Render Registry URL, with localhost as fallback
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}

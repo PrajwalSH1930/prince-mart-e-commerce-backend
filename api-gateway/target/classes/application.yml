@@ -11,7 +11,6 @@ spring:
         connect-timeout: 2000
         response-timeout: 15s
       routes:
-
         - id: identity-service
           uri: lb://IDENTITY-SERVICE
           predicates:
@@ -152,17 +151,20 @@ spring:
     loadbalancer:
       cache:
         enabled: true
-        ttl: 35s     # 🔥 improves Eureka lookup speed
+        ttl: 35s
       retry:
-        enabled: false    # 🔥 prevents long retry delays
+        enabled: false
 
 eureka:
   instance:
-    prefer-ip-address: true
+    # On Render, we don't prefer IP because container IPs change frequently.
+    # We let Eureka handle the hostname resolution.
+    prefer-ip-address: false
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
-    registryFetchIntervalSeconds: 5   # 🔥 reduces lag
+      # CRITICAL CHANGE: Uses environment variable EUREKA_SERVER_URL, else defaults to localhost
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+    registryFetchIntervalSeconds: 5
 
 resilience4j:
   circuitbreaker:
@@ -176,7 +178,7 @@ resilience4j:
   timelimiter:
     configs:
       default:
-        timeoutDuration: 15s # 🔥 CRITICAL FIX (was 30s ❌)
+        timeoutDuration: 15s
 
 logging:
   level:
