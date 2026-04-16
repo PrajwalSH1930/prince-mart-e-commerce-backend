@@ -163,7 +163,7 @@ eureka:
   client:
     service-url:
       # CRITICAL CHANGE: Uses environment variable EUREKA_SERVER_URL, else defaults to localhost
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: https://pm-server-registry.onrender.com/eureka/
     registryFetchIntervalSeconds: 5
 
 resilience4j:
