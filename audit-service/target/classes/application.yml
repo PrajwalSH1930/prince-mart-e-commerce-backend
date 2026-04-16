@@ -6,24 +6,27 @@ spring:
     name: audit-service
   
   datasource:
-    # Uses environment variables provided by Render, with your local DB as a fallback
+    # 1. Ensure the driver is explicitly set for Postgres
+    driver-class-name: org.postgresql.Driver
+    # 2. This URL will use the Render variable if present, else your local MySQL
     url: ${AUDIT_DB_URL:jdbc:mysql://localhost:3306/pm_audit_db}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:Sprince1*}
     
   jpa:
+    # 3. Change the database platform to PostgreSQL
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # 4. Remove the MySQL5Dialect line and use this instead
+        format_sql: true
 
 eureka:
   instance:
-    # Use hostname on Render for better reliability in a container environment
     prefer-ip-address: false
   client:
     service-url:
-      # Points to your LIVE Render Registry URL, with localhost as fallback
       defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
