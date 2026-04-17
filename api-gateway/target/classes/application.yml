@@ -1,5 +1,5 @@
 server:
-  port: 8000
+  port: ${PORT:8000}
 
 spring:
   application:
@@ -161,6 +161,8 @@ eureka:
     # We let Eureka handle the hostname resolution.
     prefer-ip-address: false
   client:
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
       # CRITICAL CHANGE: Uses environment variable EUREKA_SERVER_URL, else defaults to localhost
       defaultZone: https://pm-server-registry.onrender.com/eureka/
