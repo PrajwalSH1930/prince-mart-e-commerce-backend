@@ -6,6 +6,7 @@ com\pm\auth\config\CustomUserDetails.class
 com\pm\auth\entity\UserProfile.class
 com\pm\auth\config\SecurityConfig.class
 com\pm\auth\service\AuthService.class
+META-INF\MANIFEST.MF
 com\pm\auth\repository\AddressRepository.class
 com\pm\auth\service\JWTService.class
 com\pm\auth\dto\UserDTO.class
