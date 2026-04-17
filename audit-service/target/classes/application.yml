@@ -6,27 +6,23 @@ spring:
     name: audit-service
 
   datasource:
-    # 1. Ensure the driver is explicitly set for Postgres
+    url: ${DATABASE_URL} # Render provides this
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-    # 2. This URL will use the Render variable if present, else your local MySQL
-    url: ${AUDIT_DB_URL:jdbc:mysql://localhost:3306/pm_audit_db}
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:Sprince1*}
 
   jpa:
-    # 3. Change the database platform to PostgreSQL
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
-    properties:
-      hibernate:
-        # 4. Remove the MySQL5Dialect line and use this instead
-        format_sql: true
 
 eureka:
-  instance:
-    prefer-ip-address: false
   client:
     service-url:
       defaultZone: https://pm-server-registry.onrender.com/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+  instance:
+    prefer-ip-address: false
