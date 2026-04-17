@@ -1,5 +1,5 @@
 server:
-  port: 8761
+  port: ${PORT:8761}
 
 spring:
   application:
@@ -12,7 +12,7 @@ eureka:
 
   instance:
     prefer-ip-address: false
-    hostname: pm-server-registry.onrender.com
+    hostname: ${EUREKA_SERVER_URL:localhost}
 
   server:
     enable-self-preservation: false
