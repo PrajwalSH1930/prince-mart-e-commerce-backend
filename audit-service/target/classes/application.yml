@@ -6,16 +6,33 @@ spring:
     name: audit-service
 
   datasource:
-    url: ${AUDIT_DB_URL} # Render provides this
+    url: ${AUDIT_DB_URL}
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
+    hikari:
+      maximum-pool-size: 2        # 🔥 VERY IMPORTANT (limit connections)
+      minimum-idle: 1
+      idle-timeout: 30000         # close idle connections quickly
+      max-lifetime: 60000         # recycle connections
+      connection-timeout: 30000
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: update            # ok for now (dev), change to 'none' later
     show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health           # 🔥 needed for keep-alive
+
+  endpoint:
+    health:
+      show-details: always
 
 eureka:
   client:

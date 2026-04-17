@@ -6,27 +6,43 @@ spring:
     name: identity-service
 
   datasource:
-    # ✅ Uses Render DB if present, else local MySQL
-    url: ${IDENTITY_DB_URL:jdbc:mysql://localhost:3306/pm_identity_db?createDatabaseIfNotExist=true}
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:Sprince1*}
+    url: ${IDENTITY_DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 1
+      idle-timeout: 30000
+      max-lifetime: 60000
+      connection-timeout: 30000
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update   # change to 'none' later
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+  endpoint:
+    health:
+      show-details: always
 
 eureka:
   instance:
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 60
     prefer-ip-address: true
+
   client:
-    # ✅ Render + Local compatible
     service-url:
       defaultZone: https://pm-server-registry.onrender.com/eureka/
 
