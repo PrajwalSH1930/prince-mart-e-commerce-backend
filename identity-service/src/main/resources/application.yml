@@ -1,15 +1,16 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 spring:
   application:
     name: identity-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/pm_identity_db?createDatabaseIfNotExist=true
-    username: root
-    password: Sprince1*
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    # ✅ Uses Render DB if present, else local MySQL
+    url: ${IDENTITY_DB_URL:jdbc:mysql://localhost:3306/pm_identity_db?createDatabaseIfNotExist=true}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:Sprince1*}
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
@@ -17,15 +18,16 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 eureka:
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
   client:
+    # ✅ Render + Local compatible
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: https://pm-server-registry.onrender.com/eureka/
 
 logging:
   level:
-    org.springframework.cloud.vault: DEBUG
+    org.springframework.cloud: INFO
