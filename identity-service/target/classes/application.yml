@@ -22,7 +22,9 @@ spring:
 
 eureka:
   instance:
-    prefer-ip-address: false
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 60
+    prefer-ip-address: true
   client:
     # ✅ Render + Local compatible
     service-url:

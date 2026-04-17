@@ -159,7 +159,9 @@ eureka:
   instance:
     # On Render, we don't prefer IP because container IPs change frequently.
     # We let Eureka handle the hostname resolution.
-    prefer-ip-address: false
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 60
+    prefer-ip-address: true
   client:
     register-with-eureka: true
     fetch-registry: true
