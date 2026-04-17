@@ -14,16 +14,16 @@ public class CorsConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        
+
         // Allow your React app's URL
-        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        
+        corsConfig.setAllowedOrigins(Arrays.asList("http://localhost:5173", "https://prince-mart-three.vercel.app"));
+
         // Allow all standard methods
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        
+
         // Allow all headers (important for JWT/Authorization)
         corsConfig.setAllowedHeaders(Arrays.asList("*"));
-        
+
         // Allow cookies/credentials if you ever need them
         corsConfig.setAllowCredentials(true);
 
