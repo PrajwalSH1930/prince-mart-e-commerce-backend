@@ -1,10 +1,10 @@
 server:
-  port: 8092
+  port: ${PORT:8092}
 
 spring:
   application:
     name: audit-service
-  
+
   datasource:
     # 1. Ensure the driver is explicitly set for Postgres
     driver-class-name: org.postgresql.Driver
@@ -12,7 +12,7 @@ spring:
     url: ${AUDIT_DB_URL:jdbc:mysql://localhost:3306/pm_audit_db}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:Sprince1*}
-    
+
   jpa:
     # 3. Change the database platform to PostgreSQL
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -29,4 +29,4 @@ eureka:
     prefer-ip-address: false
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: https://pm-server-registry.onrender.com/eureka/
