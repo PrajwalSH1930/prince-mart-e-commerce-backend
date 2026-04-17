@@ -3,47 +3,51 @@ name: Keep Backend Alive
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/5 * * * *"   # every 5 minutes
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Ping API Gateway
+        run: curl -I --max-time 20 https://pm-api-gateway.onrender.com/actuator/health
+
       - name: Ping Identity Service
-        run: curl -s https://pm-api-gateway.onrender.com/auth/welcome
-
-      - name: Ping Audit Service
-        run: curl -s https://pm-api-gateway.onrender.com/audit/welcome
-
-      - name: Ping Cart Service
-        run: curl -s https://pm-api-gateway.onrender.com/cart/welcome
-
-      - name: Ping Coupon Service
-        run: curl -s https://pm-api-gateway.onrender.com/coupons/welcome
-
-      - name: Ping Inventory Service
-        run: curl -s https://pm-api-gateway.onrender.com/inventory/welcome
-
-      - name: Ping Notification Service
-        run: curl -s https://pm-api-gateway.onrender.com/notifications/welcome
-
-      - name: Ping Order Service
-        run: curl -s https://pm-api-gateway.onrender.com/orders/welcome
-
-      - name: Ping Payment Service
-        run: curl -s https://pm-api-gateway.onrender.com/payments/welcome
+        run: curl -I --max-time 20 https://pm-identity-service.onrender.com/actuator/health
 
       - name: Ping Product Service
-        run: curl -s https://pm-api-gateway.onrender.com/products/welcome
+        run: curl -I --max-time 20 https://pm-product-service.onrender.com/actuator/health
+
+      - name: Ping Order Service
+        run: curl -I --max-time 20 https://pm-order-service.onrender.com/actuator/health
+
+      - name: Ping Cart Service
+        run: curl -I --max-time 20 https://pm-cart-service.onrender.com/actuator/health
+
+      - name: Ping Payment Service
+        run: curl -I --max-time 20 https://pm-payment-service.onrender.com/actuator/health
+
+      - name: Ping Inventory Service
+        run: curl -I --max-time 20 https://pm-inventory-service.onrender.com/actuator/health
+
+      - name: Ping Notification Service
+        run: curl -I --max-time 20 https://pm-notification-service.onrender.com/actuator/health
 
       - name: Ping Review Service
-        run: curl -s https://pm-api-gateway.onrender.com/reviews/welcome
+        run: curl -I --max-time 20 https://pm-review-service.onrender.com/actuator/health
 
       - name: Ping Shipping Service
-        run: curl -s https://pm-api-gateway.onrender.com/shipments/welcome
+        run: curl -I --max-time 20 https://pm-shipping-service.onrender.com/actuator/health
+
+      - name: Ping Coupon Service
+        run: curl -I --max-time 20 https://pm-coupon-service.onrender.com/actuator/health
 
       - name: Ping Subscription Service
-        run: curl -s https://pm-api-gateway.onrender.com/subscriptions/welcome
+        run: curl -I --max-time 20 https://pm-subscription-service.onrender.com/actuator/health
 
       - name: Ping Wishlist Service
-        run: curl -s https://pm-api-gateway.onrender.com/wishlist/welcome
+        run: curl -I --max-time 20 https://pm-wishlist-service.onrender.com/actuator/health
+
+      - name: Ping Audit Service
+        run: curl -I --max-time 20 https://pm-audit-service.onrender.com/actuator/health
