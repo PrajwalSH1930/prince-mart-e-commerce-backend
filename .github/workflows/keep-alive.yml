@@ -8,5 +8,41 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Service
-        run: curl -s https://your-service.onrender.com/actuator/health
+      - name: Ping Identity Service
+        run: curl -s https://pm-api-gateway.onrender.com/auth/welcome
+
+      - name: Ping Audit Service
+        run: curl -s https://pm-api-gateway.onrender.com/audit/welcome
+
+      - name: Ping Cart Service
+        run: curl -s https://pm-api-gateway.onrender.com/cart/welcome
+
+      - name: Ping Coupon Service
+        run: curl -s https://pm-api-gateway.onrender.com/coupons/welcome
+
+      - name: Ping Inventory Service
+        run: curl -s https://pm-api-gateway.onrender.com/inventory/welcome
+
+      - name: Ping Notification Service
+        run: curl -s https://pm-api-gateway.onrender.com/notifications/welcome
+
+      - name: Ping Order Service
+        run: curl -s https://pm-api-gateway.onrender.com/orders/welcome
+
+      - name: Ping Payment Service
+        run: curl -s https://pm-api-gateway.onrender.com/payments/welcome
+
+      - name: Ping Product Service
+        run: curl -s https://pm-api-gateway.onrender.com/products/welcome
+
+      - name: Ping Review Service
+        run: curl -s https://pm-api-gateway.onrender.com/reviews/welcome
+
+      - name: Ping Shipping Service
+        run: curl -s https://pm-api-gateway.onrender.com/shipments/welcome
+
+      - name: Ping Subscription Service
+        run: curl -s https://pm-api-gateway.onrender.com/subscriptions/welcome
+
+      - name: Ping Wishlist Service
+        run: curl -s https://pm-api-gateway.onrender.com/wishlist/welcome
