@@ -1,13 +1,14 @@
 server:
-  port: 8085
+  port: ${PORT:8085}
 
 spring:
   application:
     name: ORDER-SERVICE
   datasource:
-    url: jdbc:mysql://localhost:3306/pm_order_db
-    username: root
-    password: Sprince1*
+    url: ${ORDER_DB_URL:jdbc:mysql://localhost:3306/pm_order_db}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:Sprince1*}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,6 +17,8 @@ spring:
 eureka:
   instance:
     prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 60
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: https://pm-server-registry.onrender.com/eureka/

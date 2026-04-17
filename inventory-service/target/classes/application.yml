@@ -1,13 +1,14 @@
 server:
-  port: 8083
+  port: ${PORT:8083}
 
 spring:
   application:
     name: inventory-service
   datasource:
-    url: jdbc:mysql://localhost:3306/pm_inventory_db
-    username: root
-    password: Sprince1*
+    url: ${INVENTORY_DB_URL:jdbc:mysql://localhost:3306/pm_inventory_db}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:Sprince1*}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,7 +16,9 @@ spring:
 
 eureka:
   instance:
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 60
     prefer-ip-address: true
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: https://pm-server-registry.onrender.com/eureka/
