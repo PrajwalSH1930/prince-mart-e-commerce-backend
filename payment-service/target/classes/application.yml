@@ -1,13 +1,14 @@
 server:
-  port: 8086
+  port: ${PORT:8086}
 
 spring:
   application:
     name: PAYMENT-SERVICE
   datasource:
-    url: jdbc:mysql://localhost:3306/pm_payment_db
-    username: root
-    password: Sprince1*
+    url: ${PAYMENT_DB_URL:jdbc:mysql://localhost:3306/pm_payment_db}
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:Sprince1*}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,11 +17,13 @@ spring:
 eureka:
   instance:
     prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 60
   client:
     register-with-eureka: true # Explicitly tell it to register
-    fetch-registry: true       # Explicitly tell it to fetch other services
+    fetch-registry: true # Explicitly tell it to fetch other services
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: https://pm-server-registry.onrender.com/eureka/
 
 razorpay:
   key:

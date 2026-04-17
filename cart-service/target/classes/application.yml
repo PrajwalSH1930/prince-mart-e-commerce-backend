@@ -1,21 +1,27 @@
 server:
-  port: 8084
+  port: ${PORT:8084}
 
 spring:
   application:
     name: CART-SERVICE
   datasource:
-    url: jdbc:mysql://localhost:3306/pm_cart_db
-    username: root
-    password: Sprince1*
+    url: ${CART_DB_URL:jdbc:mysql://localhost:3306/pm_product_db}?createDatabaseIfNotExist=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:Sprince1*}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 eureka:
   instance:
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 60
     prefer-ip-address: true
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: https://pm-server-registry.onrender.com/eureka/
